@@ -135,7 +135,7 @@ This project is licensed under the MIT License - see LICENSE file for details.
 
 ## Contact
 
-For questions or support, please contact: parthptl0911@gmail.com
+For questions or support, please contact: parthpatel660664359@gmail.com
 
 ---
 

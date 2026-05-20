@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}{{ site_name }}{% endblock %}
+{% block content %}
+<!-- ═══════════ EVENTS ═══════════ -->
+<section class="events" id="s5">
+  <div class="events-header">
+    <div>
+      <div class="section-eyebrow">
+        <div class="section-eyebrow-line"></div>
+        <span class="section-eyebrow-text">Events</span>
+      </div>
+      <h2 class="section-title">Exclusive <em>Alumni</em><br>Gatherings</h2>
+    </div>
+    <div class="alumni-only-badge">Alumni Only Access</div>
+  </div>
+  <div class="events-grid">
+    {% for event in page_obj %}
+    {% if forloop.first %}
+    <div class="event-card-featured">
+      <div class="event-banner">
+        <div class="event-banner-pattern"></div>
+        <div class="event-banner-date">
+          <div class="event-date-day">{{ event.date|date:"d" }}</div>
+          <div class="event-date-month">{{ event.date|date:"F Y" }}</div>
+        </div>
+        <div class="event-banner-title">{{ event.title }}</div>
+      </div>
+      <div class="event-card-featured-body">
+        <div class="event-meta">
+          <div class="event-meta-item">📍 {{ event.location }}</div>
+          <div class="event-meta-item">🕐 {{ event.time|time:"g:i A" }}</div>
+          <div class="event-meta-item">🎪 {{ event.get_event_type_display }}</div>
+        </div>
+        <div class="event-desc">{{ event.description|truncatewords:30 }}</div>
+      </div>
+      <div class="event-footer">
+        <div class="event-attendees">
+          <div class="event-attendees-avatars">
+            <div class="ev-av av-1">R</div>
+            <div class="ev-av av-2">P</div>
+            <div class="ev-av av-3">A</div>
+            <div class="ev-av av-4">N</div>
+          </div>
+          <div class="ev-av-count">+{{ event.attendee_count }}</div>
+          <span style="font-size:11px;color:var(--muted);margin-left:10px;">attending</span>
+        </div>
+        <a href="{% url 'events:detail' event.id %}" class="event-rsvp">View Details</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="event-card-small">
+      <div class="event-small-top">
+        <div class="event-small-date">{{ event.date|date:"d" }}</div>
+        <div class="event-small-month">{{ event.date|date:"F Y" }}</div>
+        <div class="event-small-title">{{ event.title }}</div>
+        <div class="event-small-type">{{ event.get_event_type_display }} · {{ event.location }}</div>
+      </div>
+      <div class="event-small-footer">
+        <span class="event-small-count">{{ event.attendee_count }} RSVPs</span>
+        <a href="{% url 'events:detail' event.id %}" class="event-rsvp" style="font-size:10px;padding:6px 12px;">RSVP</a>
+      </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <div class="no-events" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--muted); background: var(--card-bg); border-radius: 20px; border: 1px solid var(--border);">
+      <h3>No events found at the moment.</h3>
+      <p>Check back later for upcoming gatherings!</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div class="pagination-bar">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">← Prev</a>
+    {% else %}
+      <span class="page-btn disabled">← Prev</span>
+    {% endif %}
+    <span class="page-btn active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="page-btn">Next →</a>
+    {% else %}
+      <span class="page-btn disabled">Next →</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

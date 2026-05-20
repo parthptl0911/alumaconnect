@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Member Directory — {{ site_name }}{% endblock %}
+{% block content %}
+<!-- ═══════════ MEMBER DIRECTORY ═══════════ -->
+<section class="directory" id="s2">
+  <div class="directory-header">
+    <div class="section-eyebrow">
+      <div class="section-eyebrow-line"></div>
+      <span class="section-eyebrow-text">Member Directory</span>
+    </div>
+    <h2 class="section-title">Connect with<br><em>Our Network</em></h2>
+    <p class="section-sub">Browse verified students and alumni across industries, batches, and departments.</p>
+
+    <form method="GET" action="{% url 'alumni:alumni_list' %}" class="directory-controls">
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:var(--muted)">
+          <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M10 10l2.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input type="text" name="q" value="{{ query }}" placeholder="Search by email, company, skills...">
+      </div>
+
+      <!-- Role filters -->
+      <a href="{% url 'alumni:alumni_list' %}{% if query %}?q={{ query }}{% endif %}"
+         class="filter-pill {% if not role_filter %}active{% endif %}">All Members</a>
+      <a href="?role=alumni{% if query %}&q={{ query }}{% endif %}"
+         class="filter-pill {% if role_filter == 'alumni' %}active{% endif %}">Alumni</a>
+      <a href="?role=student{% if query %}&q={{ query }}{% endif %}{% if mentors_only %}&mentors_only=true{% endif %}"
+         class="filter-pill {% if role_filter == 'student' %}active{% endif %}">Students</a>
+      
+      <a href="?{% if query %}q={{ query }}&{% endif %}{% if role_filter %}role={{ role_filter }}&{% endif %}mentors_only={% if mentors_only %}false{% else %}true{% endif %}"
+         class="filter-pill {% if mentors_only %}active{% endif %}" style="{% if mentors_only %}background:rgba(212,175,55,0.2); color:var(--gold); border-color:var(--gold);{% endif %}">
+         Mentors Only
+      </a>
+
+      <!-- Batch filters (still useful for alumni) -->
+      <button type="submit" name="batch" value="All Batches" class="filter-pill {% if not batch_filter or batch_filter == 'All Batches' %}active{% endif %}">All Batches</button>
+      <button type="submit" name="batch" value="Batch 2021" class="filter-pill {% if batch_filter == 'Batch 2021' %}active{% endif %}">Batch 2021</button>
+      <button type="submit" name="batch" value="Batch 2020" class="filter-pill {% if batch_filter == 'Batch 2020' %}active{% endif %}">Batch 2020</button>
+      <button type="submit" name="batch" value="Batch 2018" class="filter-pill {% if batch_filter == 'Batch 2018' %}active{% endif %}">Batch 2018</button>
+    </form>
+  </div>
+
+  <div class="directory-grid">
+    {% for member in alumni_list %}
+    <div class="alumni-card">
+      <div class="alumni-card-banner alumni-card-banner-{% cycle '1' '2' '3' %}">
+        <div class="alumni-avatar av-{% cycle '1' '2' '3' '4' '5' '6' %}">
+          {% if member.role == 'alumni' and member.alumni_profile.profile_image %}
+            <img src="{{ member.alumni_profile.profile_image.url }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+          {% elif member.role == 'student' and member.student_profile.profile_image %}
+            <img src="{{ member.student_profile.profile_image.url }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+          {% else %}
+            {{ member.full_name|make_list|first|upper }}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="alumni-card-body">
+        <div class="alumni-name">{{ member.full_name|truncatechars:22 }}</div>
+
+        {% if member.role == 'alumni' %}
+          <div class="alumni-role">{{ member.alumni_profile.designation|default:"Alumni Member" }}</div>
+          <div class="alumni-company">
+            {{ member.alumni_profile.company|default:"Not specified" }}
+            {% if member.alumni_profile.location %} · {{ member.alumni_profile.location }}{% endif %}
+          </div>
+          <div class="alumni-tags">
+            <span class="tag tag-gold">Batch '{{ member.alumni_profile.graduation_year|slice:"-2:"|default:"--" }}</span>
+            {% if member.alumni_profile.is_mentor_available %}
+              <span class="tag" style="background:rgba(212,175,55,0.1); color:var(--gold); border:1px solid rgba(212,175,55,0.3); font-weight:600;">Mentor Available</span>
+            {% endif %}
+            {% if member.alumni_profile.skills %}
+              <span class="tag tag-slate">{{ member.alumni_profile.skills|truncatechars:15 }}</span>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="alumni-role" style="color:#7da4c8;">Student Member</div>
+          <div class="alumni-company">
+            {% if member.student_profile.current_year %}Year {{ member.student_profile.current_year }}{% else %}Student{% endif %}
+          </div>
+          <div class="alumni-tags">
+            <span class="tag" style="background:rgba(125,164,200,0.12); color:#7da4c8; border:1px solid rgba(125,164,200,0.3);">Student</span>
+            {% if member.student_profile.skills %}
+              <span class="tag tag-slate">{{ member.student_profile.skills|truncatechars:15 }}</span>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <div class="alumni-actions">
+          {% if member != request.user %}
+            <a href="{% url 'chat:start' member.id %}" class="btn-connect">Message</a>
+          {% endif %}
+          <a href="{% url 'accounts:public_profile' member.id %}?from=directory" class="btn-view">View</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div style="width:100%; grid-column:1 / -1; text-align:center; padding:60px 20px; background:rgba(20,20,25,0.4); border:1px dashed var(--border); border-radius:16px;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" style="margin-bottom:16px;">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <h3 style="color:#fff; font-size:18px; font-family:'Playfair Display',serif; margin-bottom:8px;">No Members Found</h3>
+      <p style="color:var(--muted); font-size:14px;">Try adjusting your search or filter criteria.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if alumni_list.has_other_pages %}
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:40px;">
+    {% if alumni_list.has_previous %}
+      <a href="?page={{ alumni_list.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}" class="filter-pill">← Prev</a>
+    {% endif %}
+    <span class="filter-pill active">{{ alumni_list.number }} / {{ alumni_list.paginator.num_pages }}</span>
+    {% if alumni_list.has_next %}
+      <a href="?page={{ alumni_list.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}" class="filter-pill">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

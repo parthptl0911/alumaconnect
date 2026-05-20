@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block title %}{{ campaign.title }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="fundraising-detail" style="padding-top: 120px; padding-bottom: 80px;">
+  <div class="container" style="max-width: 1100px; margin: 0 auto; width: 90%;">
+    <a href="{% url 'fundraising:list' %}" style="display:inline-flex; align-items:center; gap:8px; color:var(--muted); text-decoration:none; margin-bottom:30px; font-size:14px; transition:color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">
+        ← Back to Campaigns
+    </a>
+
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px;">
+      <!-- Left Column: Campaign Content -->
+      <div>
+        <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 24px;">
+          <div style="width: 100%; height: 400px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 64px;">
+            {% if campaign.image %}
+              <img src="{{ campaign.image.url }}" alt="{{ campaign.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+              🏗️
+            {% endif %}
+          </div>
+          <div style="padding: 40px;">
+            <h1 style="font-size: 36px; color: var(--sand); margin-bottom: 20px;">{{ campaign.title }}</h1>
+            <div style="line-height: 1.8; color: var(--muted); font-size: 16px;">
+              {{ campaign.description|linebreaksbr }}
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="margin-top: 30px; padding: 30px;">
+          <h3 style="color: var(--sand); margin-bottom: 20px;">Recent Contributors</h3>
+          <div class="donation-list">
+            {% for donation in recent_donations %}
+            <div class="donation-item" style="padding: 12px 0;">
+              <div class="donation-av av-{{ forloop.counter|add:1 }}">{{ donation.donor.full_name|first|upper }}</div>
+              <div class="donation-info">
+                <div class="donation-name">{{ donation.donor.full_name }}</div>
+                <div class="donation-when">{{ donation.donated_at|date:"F j, Y" }}</div>
+              </div>
+              <div class="donation-amount">₹{{ donation.amount }}</div>
+            </div>
+            {% empty %}
+            <p style="color: var(--muted);">Be the first to contribute to this cause!</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Donation Sidebar -->
+      <div>
+        <div class="glass-card" style="padding: 40px; position: sticky; top: 120px; border-radius: 24px; border: 1px solid rgba(212, 175, 55, 0.2);">
+          <div class="campaign-progress-label" style="display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600;">
+            <span style="color: var(--gold); font-size: 20px;">₹{{ campaign.current_amount }}</span>
+            <span style="color: var(--muted);">raised of ₹{{ campaign.target_amount }}</span>
+          </div>
+          <div class="campaign-bar" style="height: 12px; background: rgba(255,255,255,0.05); border-radius: 6px; overflow: hidden; margin-bottom: 24px;">
+            <div class="campaign-fill" style="width: {{ campaign.progress_percentage }}%; height: 100%; background: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);"></div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+            <div style="text-align: center;">
+              <div style="font-size: 24px; font-weight: 700; color: #fff;">{{ campaign.donations.count }}</div>
+              <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Donors</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 24px; font-weight: 700; color: #fff;">{{ campaign.days_left }}</div>
+              <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Days Left</div>
+            </div>
+          </div>
+
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert {{ message.tags }}" style="margin-bottom: 20px; color: #00ffa3; font-size: 14px; text-align: center;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          {% if user.is_authenticated %}
+          <form id="donationForm" method="POST" action="{% url 'fundraising:initiate_donation' campaign.id %}">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+              <label style="display:block; margin-bottom:10px; font-size:12px; color:var(--muted); text-transform:uppercase;">Contribution Amount</label>
+              {{ form.amount }}
+            </div>
+            <button type="submit" class="btn-primary">Complete Donation</button>
+          </form>
+          {% else %}
+          <div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px;">
+            <p style="color: var(--muted); margin-bottom: 15px;">Please login to contribute to this campaign.</p>
+            <a href="{% url 'accounts:login' %}" class="btn-connect" style="display: block; text-decoration: none;">Login to Donate</a>
+          </div>
+          {% endif %}
+
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center;">
+            <p style="font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span style="color: var(--gold);">🔒</span> Secure checkout via Razorpay
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const donationForm = document.getElementById('donationForm');
+    if (!donationForm) return;
+
+    donationForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = donationForm.querySelector('button[type="submit"]');
+        const formData = new FormData(donationForm);
+        
+        // Disable button to prevent double clicks
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Initializing Segue...";
+
+        // 1. Initiate Donation (Create Order)
+        fetch("{% url 'fundraising:initiate_donation' campaign.id %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Complete Donation";
+                return;
+            }
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                "key": data.merchant_key,
+                "amount": data.amount,
+                "currency": data.currency,
+                "name": "AlumaConnect",
+                "description": data.campaign_title,
+                "order_id": data.order_id,
+                "handler": function (response) {
+                    // 3. Verify Payment Signature
+                    verifyPayment(response);
+                },
+                "prefill": {
+                    "name": data.user_name,
+                    "email": data.user_email
+                },
+                "theme": {
+                    "color": "#C9A84C"
+                },
+                "modal": {
+                    "ondismiss": function() {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "Complete Donation";
+                    }
+                }
+            };
+            const rzp1 = new Razorpay(options);
+            rzp1.open();
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Something went wrong. Please try again.");
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Complete Donation";
+        });
+    });
+
+    function verifyPayment(razorpayResponse) {
+        fetch("{% url 'fundraising:verify_payment' %}", {
+            method: "POST",
+            body: JSON.stringify({
+                razorpay_order_id: razorpayResponse.razorpay_order_id,
+                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                razorpay_signature: razorpayResponse.razorpay_signature
+            }),
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload(); // Success message will be shown via Django messages
+            } else {
+                alert("Verification Failed: " + data.message);
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Payment verification failed. Please contact support.");
+            window.location.reload();
+        });
+    }
+});
+</script>
+
+<style>
+  .glass-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 15px;
+    color: #fff;
+    font-size: 18px;
+    transition: all 0.3s ease;
+  }
+  .glass-input:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.08);
+  }
+</style>
+{% endblock %}

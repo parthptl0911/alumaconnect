@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% block title %}Mentorship – {{ site_name }}{% endblock %}
+{% block content %}
+
+<!-- ═══════════ MENTORSHIP PAGE ═══════════ -->
+<section class="mentorship" style="padding-top: calc(76px + var(--section-py));">
+
+  <!-- Header -->
+  <div style="margin-bottom: 60px;">
+    <div class="section-eyebrow">
+      <div class="section-eyebrow-line"></div>
+      <span class="section-eyebrow-text">Mentorship</span>
+    </div>
+    <h2 class="section-title">
+      {% if user.role == 'alumni' %}
+        Your Mentorship<br><em>Inbox</em>
+      {% else %}
+        Discover Your<br><em>Mentor</em>
+      {% endif %}
+    </h2>
+    <p class="section-sub">
+      {% if user.role == 'alumni' %}
+        Review and manage mentorship requests from students.
+      {% else %}
+        Browse alumni mentors, send a request, and track your status below.
+      {% endif %}
+    </p>
+  </div>
+
+  <!-- ─── STUDENT VIEW ─── -->
+  {% if user.role == 'student' %}
+
+    <!-- Django messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div style="padding: 12px 20px; border-radius: 8px; margin-bottom: 24px; font-size: 13px;
+          {% if message.tags == 'success' %}background: rgba(93,184,130,0.1); border: 1px solid rgba(93,184,130,0.4); color: #5db882;
+          {% elif message.tags == 'warning' %}background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.4); color: var(--gold);
+          {% else %}background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.4); color: #ff4d4d;{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- ─── FIND MENTORS ─── -->
+    <div style="margin-bottom: 64px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+        <h3 style="font-family:var(--ff-display); font-size:22px; font-weight:600; color:var(--sand);">Find a Mentor</h3>
+        <span style="font-size:13px; color:var(--muted);">{{ alumni_users.count }} mentors available</span>
+      </div>
+      <div class="directory-grid">
+        {% for alumni in alumni_users %}
+        <div class="alumni-card">
+          <div class="alumni-card-banner alumni-card-banner-{% cycle '1' '2' '3' %}">
+            <div class="alumni-avatar av-{% cycle '1' '2' '3' '4' '5' '6' %}">
+              {% if alumni.alumni_profile.profile_image %}
+                <img src="{{ alumni.alumni_profile.profile_image.url }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+              {% else %}
+                {{ alumni.full_name|make_list|first|upper }}
+              {% endif %}
+            </div>
+          </div>
+          <div class="alumni-card-body">
+            <div class="alumni-name">{{ alumni.full_name|truncatechars:22 }}</div>
+            <div class="alumni-role">{{ alumni.alumni_profile.designation|default:"Alumni Member" }}</div>
+            <div class="alumni-company">{{ alumni.alumni_profile.company|default:"Not specified" }}{% if alumni.alumni_profile.location %} · {{ alumni.alumni_profile.location }}{% endif %}</div>
+            <div class="alumni-tags">
+              <span class="tag tag-gold">Batch '{{ alumni.alumni_profile.graduation_year|slice:"-2:"|default:"--" }}</span>
+              {% if alumni.alumni_profile.skills %}
+                <span class="tag tag-slate">{{ alumni.alumni_profile.skills|truncatechars:18 }}</span>
+              {% endif %}
+            </div>
+            <div class="alumni-actions">
+              {% if alumni.id in pending_mentor_ids %}
+                <span class="btn-connect" style="opacity:0.5; cursor:not-allowed; text-align:center;">Request Sent</span>
+              {% else %}
+                <a href="{% url 'mentorship:send_request' alumni.id %}" class="btn-connect">Request Mentorship</a>
+              {% endif %}
+              <a href="{% url 'accounts:public_profile' alumni.id %}" class="btn-view">View</a>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div style="grid-column:1/-1; text-align:center; padding:60px 20px; background:rgba(20,20,25,0.4); border:1px dashed var(--border); border-radius:16px;">
+          <p style="color:var(--muted);">No alumni mentors available yet.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ─── SENT REQUESTS ─── -->
+    <div>
+      <h3 style="font-family:var(--ff-display); font-size:22px; font-weight:600; color:var(--sand); margin-bottom:24px;">My Requests</h3>
+      {% if sent_requests %}
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          {% for req in sent_requests %}
+          <div style="background:var(--ink-80); border:1px solid var(--border); border-radius:12px; padding:20px 24px; display:flex; align-items:center; gap:20px;">
+            <!-- Avatar -->
+            <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-light)); display:flex; align-items:center; justify-content:center; font-family:var(--ff-display); font-weight:700; font-size:18px; color:var(--ink); flex-shrink:0;">
+              {{ req.mentor.full_name|make_list|first|upper }}
+            </div>
+            <!-- Info -->
+            <div style="flex:1;">
+              <div style="font-size:14px; font-weight:600; color:var(--sand);">{{ req.mentor.full_name }}</div>
+              <div style="font-size:12px; color:var(--muted); margin-top:2px;">Goal: {{ req.goal|truncatechars:60 }}</div>
+            </div>
+            <!-- Status Badge -->
+            <span style="padding:5px 14px; border-radius:100px; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;
+              {% if req.status == 'accepted' %}background:rgba(93,184,130,0.12); color:#5db882; border:1px solid rgba(93,184,130,0.35);
+              {% elif req.status == 'rejected' %}background:rgba(255,77,77,0.12); color:#ff4d4d; border:1px solid rgba(255,77,77,0.3);
+              {% elif req.status == 'completed' %}background:rgba(125,164,200,0.12); color:#7da4c8; border:1px solid rgba(125,164,200,0.3);
+              {% else %}background:rgba(201,168,76,0.12); color:var(--gold); border:1px solid rgba(201,168,76,0.3);{% endif %}">
+              {{ req.status }}
+            </span>
+            <!-- Date -->
+            <div style="font-size:11px; color:var(--muted); white-space:nowrap; margin-right:10px;">{{ req.created_at|date:"d M Y" }}</div>
+            
+            <!-- Delete Action -->
+            <form method="POST" action="{% url 'mentorship:delete' req.id %}" style="margin:0;" onsubmit="return confirm('Withdraw this mentorship request?')">
+              {% csrf_token %}
+              <button type="submit" class="btn-primary" style="padding: 6px 12px; font-size: 11px; width:auto;">Withdraw</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align:center; padding:40px 20px; background:rgba(20,20,25,0.4); border:1px dashed var(--border); border-radius:16px;">
+          <p style="color:var(--muted); font-size:14px;">You haven't sent any mentorship requests yet. Browse above to get started.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  <!-- ─── ALUMNI VIEW ─── -->
+  {% elif user.role == 'alumni' %}
+
+    {% if messages %}
+      {% for message in messages %}
+        <div style="padding: 12px 20px; border-radius: 8px; margin-bottom: 24px; font-size: 13px;
+          {% if message.tags == 'success' %}background: rgba(93,184,130,0.1); border: 1px solid rgba(93,184,130,0.4); color: #5db882;
+          {% else %}background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.4); color: #ff4d4d;{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h3 style="font-family:var(--ff-display); font-size:22px; font-weight:600; color:var(--sand);">Incoming Requests</h3>
+        <span style="font-size:13px; color:var(--muted);">{{ received_requests.count }} request{{ received_requests.count|pluralize }}</span>
+      </div>
+
+      {% if received_requests %}
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          {% for req in received_requests %}
+          <div style="background:var(--ink-80); border:1px solid var(--border); border-radius:14px; overflow:hidden;">
+            <div style="padding:20px 24px; display:flex; align-items:center; gap:20px;">
+              <!-- Avatar -->
+              <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,var(--slate),var(--slate-mid)); display:flex; align-items:center; justify-content:center; font-family:var(--ff-display); font-weight:700; font-size:20px; color:var(--sand); flex-shrink:0;">
+                {{ req.student.full_name|make_list|first|upper }}
+              </div>
+              <!-- Info -->
+              <div style="flex:1;">
+                <div style="font-size:14px; font-weight:600; color:var(--sand);">{{ req.student.full_name }}</div>
+                <div style="font-size:12px; color:var(--gold); margin-top:2px;">Goal: {{ req.goal }}</div>
+                {% if req.message %}
+                  <div style="font-size:12px; color:var(--muted); margin-top:6px; font-style:italic;">"{{ req.message|truncatechars:120 }}"</div>
+                {% endif %}
+              </div>
+              <!-- Status & Date -->
+              <div style="text-align:right; flex-shrink:0;">
+                <span style="display:block; padding:4px 12px; border-radius:100px; font-size:10px; font-weight:600; text-transform:uppercase; margin-bottom:6px;
+                  {% if req.status == 'accepted' %}background:rgba(93,184,130,0.12); color:#5db882; border:1px solid rgba(93,184,130,0.35);
+                  {% elif req.status == 'rejected' %}background:rgba(255,77,77,0.12); color:#ff4d4d; border:1px solid rgba(255,77,77,0.3);
+                  {% else %}background:rgba(201,168,76,0.12); color:var(--gold); border:1px solid rgba(201,168,76,0.3);{% endif %}">
+                  {{ req.status }}
+                </span>
+                <div style="font-size:11px; color:var(--muted);">{{ req.created_at|date:"d M Y" }}</div>
+              </div>
+            </div>
+            <!-- Actions - only show if pending -->
+            {% if req.status == 'pending' %}
+            <div style="padding:12px 24px; border-top:1px solid var(--border); background:rgba(255,255,255,0.02); display:flex; gap:10px;">
+              <button onclick="openAcceptModal('{{ req.id }}')" style="padding:8px 20px; background:rgba(93,184,130,0.12); color:#5db882; border:1px solid rgba(93,184,130,0.35); border-radius:6px; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; transition:all 0.3s; font-family:inherit;">Accept</button>
+              <button onclick="openRejectModal('{{ req.id }}')" style="padding:8px 20px; background:rgba(255,77,77,0.08); color:#ff4d4d; border:1px solid rgba(255,77,77,0.3); border-radius:6px; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; transition:all 0.3s; font-family:inherit;">Reject</button>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align:center; padding:60px 20px; background:rgba(20,20,25,0.4); border:1px dashed var(--border); border-radius:16px;">
+          <div style="font-size:40px; margin-bottom:16px;">🤝</div>
+          <h4 style="color:var(--sand); font-family:var(--ff-display); font-size:20px; margin-bottom:8px;">No requests yet</h4>
+          <p style="color:var(--muted); font-size:14px;">Students will be able to find and connect with you via the Alumni Directory.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  {% else %}
+    <!-- Fallback for admin -->
+    <p style="color:var(--muted);">Mentorship is available for students and alumni.</p>
+  {% endif %}
+
+</section>
+
+<!-- ─── MODALS ─── -->
+{% if user.role == 'alumni' %}
+<!-- Accept Modal -->
+<div id="acceptModal" class="modal-overlay">
+  <div class="modal-card glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <h3 style="font-family:var(--ff-display); font-size:20px; color:var(--gold);">Accept Mentorship</h3>
+      <button onclick="closeModal('acceptModal')" class="modal-close">&times;</button>
+    </div>
+    <form id="acceptForm" method="POST">
+      {% csrf_token %}
+      <div style="margin-bottom:20px;">
+        <label class="form-label">Meeting Date & Time</label>
+        {{ accept_form.meeting_date }}
+      </div>
+      <div style="margin-bottom:20px;">
+        <label class="form-label">Platform</label>
+        {{ accept_form.platform }}
+      </div>
+      <div style="margin-bottom:24px;">
+        <label class="form-label">Meeting Link</label>
+        {{ accept_form.meeting_link }}
+      </div>
+      <button type="submit" class="btn-primary">Confirm Acceptance</button>
+    </form>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal-overlay">
+  <div class="modal-card glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <h3 style="font-family:var(--ff-display); font-size:20px; color:#ff4d4d;">Decline Request</h3>
+      <button onclick="closeModal('rejectModal')" class="modal-close">&times;</button>
+    </div>
+    <form id="rejectForm" method="POST">
+      {% csrf_token %}
+      <div style="margin-bottom:24px;">
+        <label class="form-label">Reason for Declining</label>
+        {{ reject_form.reason }}
+      </div>
+      <button type="submit" class="btn-primary">Send Refusal</button>
+    </form>
+  </div>
+</div>
+
+<style>
+  .modal-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    display: none; align-items:center; justify-content:center; z-index: 1000;
+  }
+  .modal-card {
+    width: 90%; max-width: 500px; padding: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transform: translateY(20px); transition: all 0.3s ease;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-overlay.active .modal-card { transform: translateY(0); }
+  .modal-close {
+    background:none; border:none; color:var(--muted); font-size:24px; cursor:pointer;
+  }
+  .form-label {
+    display:block; margin-bottom:8px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;
+  }
+  .glass-input {
+    width: 100%; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 12px 16px; color:#fff; transition:0.3s;
+  }
+  .glass-input:focus { border-color: var(--gold); background: rgba(255,255,255,0.08); outline:none; }
+  .glass-input option { background-color: var(--ink-80, #1A1A24); color: #fff; }
+</style>
+
+<script>
+  function openAcceptModal(requestId) {
+    const form = document.getElementById('acceptForm');
+    form.action = `/mentorship/accept/${requestId}/`;
+    document.getElementById('acceptModal').classList.add('active');
+    
+    // Set minimum date/time to now
+    const now = new Date();
+    // Offset for local timezone to match datetime-local format (YYYY-MM-DDTHH:mm)
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const minDateTime = now.toISOString().slice(0, 16);
+    const dateInput = document.getElementById('meeting_date');
+    if (dateInput) {
+        dateInput.min = minDateTime;
+    }
+  }
+  function openRejectModal(requestId) {
+    const form = document.getElementById('rejectForm');
+    form.action = `/mentorship/reject/${requestId}/`;
+    document.getElementById('rejectModal').classList.add('active');
+  }
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+  }
+  // Close on outside click
+  window.onclick = function(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+      event.target.classList.remove('active');
+    }
+  }
+</script>
+{% endif %}
+
+{% endblock %}

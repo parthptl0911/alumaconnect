@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — {{ site_name }}{% endblock %}
+{% block content %}
+
+<!-- ═══════════ DASHBOARD ═══════════ -->
+<section class="dashboard-section">
+  <div style="margin-bottom:48px;">
+    <div class="section-eyebrow">
+      <div class="section-eyebrow-line"></div>
+      <span class="section-eyebrow-text">Dashboard</span>
+    </div>
+    <h2 class="section-title">Your Personal<br><em>Command Center</em></h2>
+  </div>
+
+  <div class="dashboard-inner">
+    <!-- ── SIDEBAR ── -->
+    <div class="dash-sidebar">
+      <div class="dash-profile">
+        <div class="dash-profile-av">
+          {% if user.profile.profile_image %}
+            <img src="{{ user.profile.profile_image.url }}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+          {% else %}
+            {{ user.first_name|make_list|first|upper }}
+          {% endif %}
+        </div>
+        <div class="dash-profile-name">{{ user.full_name|truncatechars:18 }}</div>
+        <div class="dash-profile-role" style="text-transform:capitalize;">{{ user.role }} Account</div>
+      </div>
+      <div class="dash-nav">
+        <a href="#" data-section="overview"    class="dash-nav-item active" id="nav-overview"><span class="dash-nav-icon">📊</span> Dashboard</a>
+        <a href="{% url 'alumni:alumni_list' %}" class="dash-nav-item"><span class="dash-nav-icon">🎓</span> Alumni Directory</a>
+        <a href="#" data-section="messages"    class="dash-nav-item" id="nav-messages"><span class="dash-nav-icon">💬</span> Messages</a>
+        <a href="#" data-section="mentorship"  class="dash-nav-item" id="nav-mentorship"><span class="dash-nav-icon">🤝</span> Mentorship <span class="dash-nav-badge">{{ total_requests }}</span></a>
+        <a href="#" data-section="jobs"        class="dash-nav-item" id="nav-jobs"><span class="dash-nav-icon">💼</span> Jobs</a>
+        {% if user.role == 'alumni' %}
+        <a href="{% url 'events:list' %}"       class="dash-nav-item"><span class="dash-nav-icon">🎟️</span> Events</a>
+        {% endif %}
+        <a href="#" data-section="fundraising" class="dash-nav-item" id="nav-fundraising"><span class="dash-nav-icon">💰</span> Fundraising</a>
+        {% if user.role == 'alumni' %}
+        <a href="#" data-section="stories"     class="dash-nav-item" id="nav-stories"><span class="dash-nav-icon">✍️</span> My Stories</a>
+        {% endif %}
+        <a href="{% url 'accounts:profile_view' %}" class="dash-nav-item"><span class="dash-nav-icon">👤</span> My Profile</a>
+        <a href="{% url 'accounts:profile_edit' %}" class="dash-nav-item" style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;"><span class="dash-nav-icon">⚙️</span> Settings</a>
+      </div>
+    </div>
+
+    <!-- ── MAIN CONTENT AREA ── -->
+    <div class="dash-main">
+
+      <!-- ════════════════════════════════
+           SECTION: OVERVIEW (default)
+           ════════════════════════════════ -->
+      <div id="overview-section" class="dash-section-pane">
+        <!-- Stat Cards -->
+        <div class="dash-stats-row">
+          {% if user.role == 'student' %}
+          <div class="dash-stat-card">
+            <div class="dash-stat-top"><span class="dash-stat-icon">🤝</span><span class="dash-stat-trend up">Active</span></div>
+            <div class="dash-stat-num">{{ stats.mentorship_requests }}</div>
+            <div class="dash-stat-label">Mentorship Requests</div>
+          </div>
+          <div class="dash-stat-card">
+            <div class="dash-stat-top"><span class="dash-stat-icon">💼</span><span class="dash-stat-trend up">Processing</span></div>
+            <div class="dash-stat-num">{{ stats.applied_jobs }}</div>
+            <div class="dash-stat-label">Jobs Applied</div>
+          </div>
+          {% elif user.role == 'alumni' %}
+          <div class="dash-stat-card">
+            <div class="dash-stat-top"><span class="dash-stat-icon">🤝</span><span class="dash-stat-trend up">↑ New</span></div>
+            <div class="dash-stat-num">{{ stats.pending_requests }}</div>
+            <div class="dash-stat-label">Pending Requests</div>
+          </div>
+          <div class="dash-stat-card">
+            <div class="dash-stat-top"><span class="dash-stat-icon">💼</span><span class="dash-stat-trend up">Active</span></div>
+            <div class="dash-stat-num">{{ stats.jobs_posted }}</div>
+            <div class="dash-stat-label">Jobs Posted</div>
+          </div>
+          <div class="dash-stat-card">
+            <div class="dash-stat-top"><span class="dash-stat-icon">🎟️</span><span class="dash-stat-trend up">Attending</span></div>
+            <div class="dash-stat-num">{{ stats.event_participation }}</div>
+            <div class="dash-stat-label">Event Registrations</div>
+          </div>
+          {% elif user.role == 'admin' %}
+          <div class="dash-stat-card">
+            <div class="dash-stat-top"><span class="dash-stat-icon">👥</span><span class="dash-stat-trend up">Growing</span></div>
+            <div class="dash-stat-num">{{ stats.total_users }}</div>
+            <div class="dash-stat-label">Total Users</div>
+          </div>
+          <div class="dash-stat-card">
+            <div class="dash-stat-top"><span class="dash-stat-icon">⏳</span><span class="dash-stat-trend up">Action Req.</span></div>
+            <div class="dash-stat-num">{{ stats.pending_approvals }}</div>
+            <div class="dash-stat-label">Pending Approvals</div>
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="dash-bottom-grid">
+          <div class="dash-left-col">
+            {% if user.role == 'alumni' %}
+            <div class="dash-activity">
+              <div class="dash-section-header">
+                <span class="dash-section-title">My Success Stories</span>
+                <a href="{% url 'stories:submit' %}" class="dash-section-link">+ Create New</a>
+              </div>
+              <div class="activity-list">
+                {% if user_stories %}
+                  {% for story in user_stories|slice:":3" %}
+                  <div class="activity-item" style="flex-direction:column; align-items:flex-start; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                      <div style="font-size:14px; font-weight:600; color:var(--sand);">{{ story.title }}</div>
+                      <span style="font-size:10px; padding:3px 8px; border-radius:4px; background:rgba(255,255,255,0.05); color:{% if story.status == 'approved' %}#00ffa3{% else %}var(--gold){% endif %}; text-transform:uppercase;">{{ story.status }}</span>
+                    </div>
+                    <p style="font-size:12px; color:var(--muted); line-height:1.4; margin:0;">{{ story.content|truncatechars:100 }}</p>
+                    <div style="font-size:10px; color:var(--border-str);">Published: {{ story.submitted_at|date:"d M Y" }}</div>
+                  </div>
+                  {% endfor %}
+                  <div style="padding:15px; text-align:center; border-top:1px solid var(--border);">
+                    <a href="#" data-section="stories" class="dash-section-link dash-nav-trigger" style="font-size:12px; font-weight:600;">View All My Stories →</a>
+                  </div>
+                {% else %}
+                  <div style="padding:40px 20px; text-align:center;">
+                    <div style="font-size:24px; margin-bottom:10px;">✍️</div>
+                    <p style="color:var(--muted); font-size:13px; margin-bottom:15px;">No stories published yet. Share your journey!</p>
+                    <a href="{% url 'stories:submit' %}" class="btn-connect" style="display:inline-block; text-decoration:none; padding:8px 20px;">Create Story</a>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Activity Widget -->
+            <div class="dash-activity">
+              <div class="dash-section-header">
+                <span class="dash-section-title">Recent Activity</span>
+                <a href="#" data-section="messages" class="dash-section-link dash-nav-trigger">View all</a>
+              </div>
+              <div class="activity-list">
+                {% if user.role == 'student' %}
+                  {% for req in mentorship_requests|slice:":3" %}
+                  <div class="activity-item">
+                    <div class="activity-dot" style="background:{% if req.status == 'accepted' %}#00ffa3{% elif req.status == 'rejected' %}#ff4d4d{% else %}var(--gold){% endif %};"></div>
+                    <div class="activity-text">Mentorship request to <strong>{{ req.mentor.full_name|truncatechars:20 }}</strong> is <strong>{{ req.status }}</strong></div>
+                    <div class="activity-time">{{ req.updated_at|timesince }} ago</div>
+                  </div>
+                  {% endfor %}
+                {% elif user.role == 'alumni' %}
+                  {% for req in all_mentorship_requests|slice:":3" %}
+                  <div class="activity-item">
+                    <div class="activity-dot" style="background:{% if req.status == 'accepted' %}#00ffa3{% elif req.status == 'rejected' %}#ff4d4d{% else %}var(--gold){% endif %};"></div>
+                    <div class="activity-text"><strong>{{ req.student.full_name|truncatechars:20 }}</strong> sent a mentorship request ({{ req.status }})</div>
+                    <div class="activity-time">{{ req.created_at|timesince }} ago</div>
+                  </div>
+                  {% endfor %}
+                {% endif %}
+                {% if not mentorship_requests and not job_applications %}
+                  <p style="color:var(--muted); font-size:13px; padding:20px;">No recent activity yet.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN (1fr) -->
+          <div class="dash-right-col">
+            <div class="dash-activity">
+              <div class="dash-section-header">
+                <span class="dash-section-title">{% if user.role == 'alumni' %}Incoming Requests{% else %}Active Requests{% endif %}</span>
+              </div>
+              <div class="activity-list">
+                {% if user.role == 'alumni' %}
+                  {% for req in mentorship_requests|slice:":5" %}
+                  <div class="activity-item" style="flex-direction:column; align-items:flex-start; gap:10px;">
+                    <div style="display:flex; gap:10px; align-items:center; width:100%;">
+                      <div class="ment-req-av" style="width:32px; height:32px; font-size:12px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff;">{{ req.student.full_name|make_list|first|upper }}</div>
+                      <div style="flex:1;">
+                        <div style="font-size:12px; font-weight:600; color:var(--sand);">{{ req.student.full_name }}</div>
+                        <div style="font-size:11px; color:var(--muted);">{{ req.goal|truncatechars:20 }}</div>
+                      </div>
+                      <span class="ment-badge" style="background:var(--gold); color:#000; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600;">NEW</span>
+                    </div>
+                    <div style="display:flex; gap:8px; width:100%;">
+                      <a href="{% url 'mentorship:accept_request' req.id %}" style="flex:1; font-size:10px; padding:6px; background:#00ffa3; color:#000; text-align:center; text-decoration:none; border-radius:6px; font-weight:600;">Accept</a>
+                      <a href="{% url 'mentorship:reject_request' req.id %}" style="flex:1; font-size:10px; padding:6px; background:rgba(255,77,77,0.1); color:#ff4d4d; border:1px solid #ff4d4d; text-align:center; text-decoration:none; border-radius:6px; font-weight:600;">Reject</a>
+                    </div>
+                  </div>
+                  {% empty %}
+                  <p style="color:var(--muted); font-size:13px; padding:20px;">No pending requests.</p>
+                  {% endfor %}
+                {% else %}
+                  {% for req in mentorship_requests|slice:":5" %}
+                  <div class="activity-item">
+                    <div class="activity-dot" style="background:{% if req.status == 'accepted' %}#00ffa3{% elif req.status == 'rejected' %}#ff4d4d{% else %}var(--gold){% endif %};"></div>
+                    <div style="flex:1;">
+                      <div style="font-size:12px; font-weight:600; color:var(--sand);">Mentor: {{ req.mentor.full_name|truncatechars:20 }}</div>
+                      <div style="font-size:11px; color:var(--muted);">{{ req.status|upper }}</div>
+                    </div>
+                  </div>
+                  {% empty %}
+                  <p style="color:var(--muted); font-size:13px; padding:20px;">No active requests.</p>
+                  {% endfor %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /#overview-section -->
+
+      <!-- ════════════════════════════════
+           SECTION: MENTORSHIP
+           ════════════════════════════════ -->
+      <div id="mentorship-section" class="dash-section-pane" style="display:none;">
+        <div class="dash-section-header" style="margin-bottom:20px;">
+          <span class="dash-section-title" style="font-size:18px;">🤝 Mentorship Hub</span>
+          <a href="{% url 'mentorship:index' %}" class="dash-section-link">Full Page →</a>
+        </div>
+        <div class="dash-activity">
+          <div class="activity-list">
+            {% if user.role == 'alumni' %}
+              {% for req in mentorship_requests %}
+              <div class="activity-item" style="flex-direction:column;align-items:flex-start;gap:8px;">
+                <div style="display:flex;gap:10px;align-items:center;width:100%;">
+                  <div style="width:36px;height:36px;font-size:14px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;">{{ req.student.full_name|make_list|first|upper }}</div>
+                  <div style="flex:1;">
+                    <div style="font-size:13px;font-weight:600;color:var(--sand);">{{ req.student.full_name }}</div>
+                    <div style="font-size:11px;color:var(--muted);">Goal: {{ req.goal }}</div>
+                  </div>
+                  <span style="padding:3px 10px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3);">PENDING</span>
+                </div>
+                {% if req.message %}<p style="font-size:11px;color:var(--muted);font-style:italic;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px;width:100%;">"{{ req.message|truncatechars:120 }}"</p>{% endif %}
+                <div style="display:flex;gap:8px;">
+                  <a href="{% url 'mentorship:accept_request' req.id %}" style="font-size:11px;padding:6px 16px;background:rgba(93,184,130,0.12);color:#5db882;border:1px solid rgba(93,184,130,0.35);border-radius:6px;font-weight:600;text-decoration:none;">Accept</a>
+                  <a href="{% url 'mentorship:reject_request' req.id %}" style="font-size:11px;padding:6px 16px;background:rgba(255,77,77,0.08);color:#ff4d4d;border:1px solid rgba(255,77,77,0.3);border-radius:6px;font-weight:600;text-decoration:none;">Reject</a>
+                </div>
+              </div>
+              {% empty %}
+              <p style="color:var(--muted);font-size:14px;padding:20px;">No pending mentorship requests.</p>
+              {% endfor %}
+            {% else %}
+              {% for req in mentorship_requests %}
+              <div class="activity-item">
+                <div class="activity-dot" style="background:{% if req.status == 'accepted' %}#5db882{% elif req.status == 'rejected' %}#ff4d4d{% else %}var(--gold){% endif %};"></div>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--sand);">{{ req.mentor.full_name|truncatechars:24 }}</div>
+                  <div style="font-size:11px;color:var(--muted);">{{ req.goal|truncatechars:50 }}</div>
+                </div>
+                <span style="font-size:10px;padding:4px 10px;border-radius:100px;border:1px solid;color:{% if req.status == 'accepted' %}#5db882{% elif req.status == 'rejected' %}#ff4d4d{% else %}var(--gold){% endif %};border-color:{% if req.status == 'accepted' %}rgba(93,184,130,0.4){% elif req.status == 'rejected' %}rgba(255,77,77,0.4){% else %}rgba(201,168,76,0.4){% endif %};background:{% if req.status == 'accepted' %}rgba(93,184,130,0.08){% elif req.status == 'rejected' %}rgba(255,77,77,0.08){% else %}rgba(201,168,76,0.08){% endif %};">{{ req.status|upper }}</span>
+              </div>
+              {% empty %}
+              <p style="color:var(--muted);font-size:14px;padding:20px;">You haven't sent any mentorship requests yet.</p>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+      </div><!-- /#mentorship-section -->
+
+      <!-- ════════════════════════════════
+           SECTION: JOBS
+           ════════════════════════════════ -->
+      <div id="jobs-section" class="dash-section-pane" style="display:none;">
+        <div class="dash-section-header" style="margin-bottom:20px;">
+          <span class="dash-section-title" style="font-size:18px;">💼 Jobs</span>
+          <a href="{% url 'jobs:jobs_list' %}" class="dash-section-link">Browse All →</a>
+        </div>
+        <div class="dash-activity">
+          <div class="activity-list">
+            {% if user.role == 'student' %}
+              {% for app in job_applications %}
+              <div class="activity-item">
+                <div class="activity-dot" style="background:{% if app.status == 'accepted' %}#5db882{% elif app.status == 'rejected' %}#ff4d4d{% elif app.status == 'reviewed' %}var(--gold){% else %}var(--sand){% endif %};"></div>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--sand);">{{ app.job.title|truncatechars:30 }}</div>
+                  <div style="font-size:11px;color:var(--muted);">{{ app.job.company|default:"Company" }} · Applied {{ app.applied_at|date:"d M Y" }}</div>
+                </div>
+                <span style="font-size:10px;padding:4px 10px;border-radius:100px;border:1px solid;color:{% if app.status == 'accepted' %}#5db882{% elif app.status == 'rejected' %}#ff4d4d{% elif app.status == 'reviewed' %}var(--gold){% else %}var(--muted){% endif %};border-color:currentColor;background:rgba(255,255,255,0.03);">{{ app.status|upper }}</span>
+              </div>
+              {% empty %}
+              <p style="color:var(--muted);font-size:14px;padding:20px;">You haven't applied to any jobs yet. <a href="{% url 'jobs:jobs_list' %}" style="color:var(--gold);">Browse jobs →</a></p>
+              {% endfor %}
+            {% elif user.role == 'alumni' %}
+              {% for app in job_applications %}
+              <div class="activity-item">
+                <div class="activity-dot" style="background:{% if app.status == 'accepted' %}#5db882{% elif app.status == 'rejected' %}#ff4d4d{% elif app.status == 'reviewed' %}var(--gold){% else %}var(--sand){% endif %};"></div>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--sand);">{{ app.applicant.full_name|truncatechars:22 }}</div>
+                  <div style="font-size:11px;color:var(--muted);">Applied for: {{ app.job.title|truncatechars:28 }}</div>
+                </div>
+                <a href="{% url 'jobs:manage_applicants' app.job.id %}" style="font-size:11px;padding:4px 12px;border:1px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;">Review</a>
+              </div>
+              {% empty %}
+              <p style="color:var(--muted);font-size:14px;padding:20px;">No applications received yet. <a href="{% url 'jobs:post_job' %}" style="color:var(--gold);">Post a job →</a></p>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+      </div><!-- /#jobs-section -->
+
+      <!-- ════════════════════════════════
+           SECTION: MESSAGES
+           ════════════════════════════════ -->
+      <div id="messages-section" class="dash-section-pane" style="display:none;">
+        <div class="dash-section-header" style="margin-bottom:20px;">
+          <span class="dash-section-title" style="font-size:18px;">💬 Messages</span>
+          <a href="{% url 'chat:index' %}" class="dash-section-link">Open Chat →</a>
+        </div>
+        <div class="dash-activity">
+          <div class="activity-list">
+            {% for item in conversations_data %}
+            <a href="{% url 'chat:conversation_detail' item.conversation.id %}" style="text-decoration:none;">
+              <div class="activity-item" style="cursor:pointer;">
+                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-light));display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-weight:700;font-size:14px;color:var(--ink);flex-shrink:0;">{{ item.other_user.email|make_list|first|upper }}</div>
+                <div style="flex:1;min-width:0;">
+                <div style="font-size:13px; font-weight:600; color:var(--sand);">{{ item.other_user.full_name|truncatechars:22 }}</div>
+                  <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{% if item.last_message %}{{ item.last_message.content|truncatechars:40 }}{% else %}No messages yet{% endif %}</div>
+                </div>
+              </div>
+            </a>
+            {% empty %}
+            <p style="color:var(--muted);font-size:14px;padding:20px;">No conversations yet. <a href="{% url 'alumni:alumni_list' %}" style="color:var(--gold);">Browse alumni to start chatting →</a></p>
+            {% endfor %}
+          </div>
+        </div>
+      </div><!-- /#messages-section -->
+
+      {% if user.role == 'alumni' %}
+      <!-- ════════════════════════════════
+           SECTION: STORIES (NEW)
+           ════════════════════════════════ -->
+      <div id="stories-section" class="dash-section-pane" style="display:none;">
+        <div class="dash-section-header" style="margin-bottom:20px;">
+          <span class="dash-section-title" style="font-size:18px;">✍️ My Success Stories</span>
+          <a href="{% url 'stories:submit' %}" class="btn-connect" style="text-decoration:none; padding:8px 16px; font-size:12px;">+ Add Story</a>
+        </div>
+        <div class="dash-activity">
+          <div class="activity-list">
+            {% for story in user_stories %}
+            <div class="activity-item" style="padding: 24px;">
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <h4 style="font-size:16px; color:var(--sand); margin:0;">{{ story.title }}</h4>
+                        <span style="font-size:11px; padding:4px 12px; border-radius:100px; background:rgba(255,255,255,0.05); color:{% if story.status == 'approved' %}#00ffa3{% else %}var(--gold){% endif %};">{{ story.status|upper }}</span>
+                    </div>
+                    <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:16px;">{{ story.content|truncatechars:200 }}</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; color:var(--border-str);">Submitted on {{ story.submitted_at|date:"d M Y" }}</span>
+                        <div style="display:flex; gap:12px;">
+                            <a href="{% url 'stories:detail' story.id %}" style="font-size:12px; color:var(--gold); text-decoration:none;">Preview →</a>
+                            <form method="POST" action="{% url 'stories:delete' story.id %}" style="margin:0;" onsubmit="return confirm('Delete this story?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-primary" style="width:auto; padding:6px 12px; font-size:11px;">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="padding:40px 20px; text-align:center;">
+                <h3 style="color:var(--sand); margin-bottom:12px;">No Stories Yet</h3>
+                <p style="color:var(--muted); max-width:400px; margin:0 auto 24px;">Your journey can inspire thousands. Share your success story today.</p>
+                <a href="{% url 'stories:submit' %}" class="btn-connect" style="display:inline-block; text-decoration:none; padding:12px 32px;">Submit Your First Story</a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div><!-- /#stories-section -->
+      {% endif %}
+
+    </div><!-- /.dash-main -->
+  </div><!-- /.dashboard-inner -->
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const navItems   = document.querySelectorAll('[data-section]');
+  const allPanes   = document.querySelectorAll('.dash-section-pane');
+
+  function showSection(name) {
+    allPanes.forEach(p => p.style.display = 'none');
+    navItems.forEach(n => n.classList.remove('active'));
+
+    const target = document.getElementById(name + '-section');
+    if (target) target.style.display = 'block';
+
+    // Highlight matching nav item(s)
+    navItems.forEach(n => {
+      if (n.getAttribute('data-section') === name) n.classList.add('active');
+    });
+  }
+
+  navItems.forEach(item => {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      showSection(this.getAttribute('data-section'));
+    });
+  });
+})();
+</script>
+{% endblock %}

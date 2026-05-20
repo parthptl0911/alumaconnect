@@ -1,0 +1,4 @@
+/* AlumaConnect – main stylesheet placeholder */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; padding: 1rem; }
+nav a { margin-right: 1rem; text-decoration: none; }

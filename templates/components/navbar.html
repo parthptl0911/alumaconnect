@@ -1,0 +1,36 @@
+<nav>
+  <a href="{% url 'accounts:index' %}" class="nav-logo" style="text-decoration:none; z-index: 1200;">
+    <div class="nav-logo-mark">A</div>
+    <span class="nav-logo-text">Aluma<span>Connect</span></span>
+  </a>
+
+  <button class="nav-toggle-btn" aria-label="Toggle Navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <ul class="nav-links">
+    <li><a href="{% url 'alumni:alumni_list' %}">Directory</a></li>
+    <li><a href="{% url 'mentorship:index' %}">Mentorship</a></li>
+    <li><a href="{% url 'jobs:jobs_list' %}">Jobs</a></li>
+    {% if user.is_authenticated and user.role == 'alumni' %}
+    <li><a href="{% url 'events:list' %}">Events</a></li>
+    {% endif %}
+    <li><a href="{% url 'fundraising:list' %}">Fundraising</a></li>
+    <li><a href="{% url 'stories:stories_list' %}">Stories</a></li>
+  </ul>
+  <div class="nav-cta">
+    {% if user.is_authenticated %}
+      <span class="user-greeting" style="color: var(--sand); font-size: 14px; font-weight: 500; margin-right: 12px; margin-bottom: 10px;">Hello, <span style="color: var(--gold);">{{ user.full_name|truncatechars:18 }}</span></span>
+      <div class="cta-btns" style="display: flex; gap: 10px; width: 100%;">
+        <a href="{% url 'accounts:profile_view' %}" class="btn-outline" style="border-radius: 6px; flex: 1; text-align: center;">Profile</a>
+        <a href="{% url 'accounts:dashboard' %}" class="btn-primary" style="flex: 1; text-align: center;">Dashboard</a>
+      </div>
+      <a href="{% url 'accounts:logout' %}" class="btn-outline" style="border-color: var(--border); color: var(--muted); border-radius: 6px; margin-top: 10px; width: 100%; text-align: center;">Logout</a>
+    {% else %}
+      <a href="{% url 'accounts:login' %}" class="btn-outline">Sign In</a>
+      <a href="{% url 'accounts:register' %}" class="btn-primary">Join Network →</a>
+    {% endif %}
+  </div>
+</nav>

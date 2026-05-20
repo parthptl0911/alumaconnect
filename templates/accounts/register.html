@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Access — {{ site_name }}{% endblock %}
+
+{% block extra_css %}
+<!-- Reuses the clean styling from login but adjusts for multip-step mechanics -->
+<style>
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 20px 60px;
+}
+.auth-card {
+    background: rgba(20, 20, 25, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.5;
+}
+.auth-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+.auth-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: #fff;
+    margin-bottom: 12px;
+}
+.auth-title em {
+    color: var(--gold);
+    font-style: italic;
+}
+.auth-sub {
+    font-size: 14px;
+    color: var(--muted);
+}
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sand);
+}
+.form-input {
+    background: rgba(10, 10, 15, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s;
+    outline: none;
+}
+.form-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.1);
+}
+.form-input:disabled {
+    opacity: 0.6;
+    background: rgba(0, 0, 0, 0.2);
+}
+.btn-submit {
+    background: var(--gold);
+    color: #0A0A0F;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+.btn-submit:hover {
+    background: #e6c561;
+    transform: translateY(-2px);
+}
+.auth-footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+}
+.auth-footer a {
+    color: var(--gold);
+    text-decoration: none;
+}
+.messages {
+    background: rgba(232, 128, 128, 0.1);
+    border: 1px solid #E88080;
+    color: #E88080;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.verified-box {
+    background: rgba(93, 184, 130, 0.1);
+    border: 1px solid #5DB882;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+.verified-box-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #5DB882;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(93, 184, 130, 0.2);
+    padding-bottom: 8px;
+}
+.verified-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--sand);
+    padding: 4px 0;
+}
+.verified-label {
+    color: var(--muted);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+        <div class="auth-header">
+            <h1 class="auth-title">Join <em>{{ site_name }}</em></h1>
+            <p class="auth-sub">Access is restricted to verified college members</p>
+        </div>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="messages">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        {% if step == 1 %}
+        <!-- STEP 1: Email Verification -->
+        <form class="auth-form" method="POST" action="{% url 'accounts:register' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="check_email">
+            <div class="form-group">
+                <label for="email">Enter your pre-authorized college email</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="e.g. j.doe@college.edu" value="{{ email|default:'' }}" required>
+            </div>
+            <button type="submit" class="btn-primary">Verify Access</button>
+        </form>
+        {% elif step == 2 %}
+        <!-- STEP 2: Complete Registration -->
+        <div class="verified-box">
+            <div class="verified-box-head">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                Identity Verified
+            </div>
+            <div class="verified-row">
+                <span class="verified-label">Name</span>
+                <span>{{ whitelist.name }}</span>
+            </div>
+            <div class="verified-row">
+                <span class="verified-label">Role</span>
+                <span style="text-transform: capitalize;">{{ whitelist.role }}</span>
+            </div>
+            <div class="verified-row">
+                <span class="verified-label">Batch</span>
+                <span>{{ whitelist.batch }}</span>
+            </div>
+            <div class="verified-row">
+                <span class="verified-label">Department</span>
+                <span>{{ whitelist.department }}</span>
+            </div>
+        </div>
+
+        <form class="auth-form" method="POST" action="{% url 'accounts:register' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="register">
+            <input type="hidden" name="email" value="{{ email }}">
+            
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email Address</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div style="color: #E88080; font-size: 11px; margin-top: -4px;">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Create a Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}<div style="color: #E88080; font-size: 11px; margin-top: -4px;">{{ form.password.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.confirm_password.id_for_label }}">Confirm Password</label>
+                {{ form.confirm_password }}
+                {% if form.confirm_password.errors %}<div style="color: #E88080; font-size: 11px; margin-top: -4px;">{{ form.confirm_password.errors.0 }}</div>{% endif %}
+            </div>
+
+            <button type="submit" class="btn-primary">Complete Setup →</button>
+        </form>
+        {% endif %}
+
+        <div class="auth-footer">
+            Already verified? <a href="{% url 'accounts:login' %}">Sign In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

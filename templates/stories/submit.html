@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Share Your Story — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="stories-submit" style="padding-top: 120px; padding-bottom: 80px;">
+  <div class="container" style="max-width: 800px; margin: 0 auto; width: 90%;">
+    <div class="section-eyebrow">
+      <div class="section-eyebrow-line"></div>
+      <span class="section-eyebrow-text">Inspire Others</span>
+    </div>
+    <h2 class="section-title" style="margin-bottom: 40px;">Share Your<br><em>Success Journey</em></h2>
+
+    <div class="glass-card" style="padding: 40px; border-radius: 24px;">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: 24px;">
+          <label style="display:block; margin-bottom:8px; color:var(--sand); font-weight:500;">Story Title</label>
+          {{ form.title }}
+          <p style="font-size:12px; color:var(--muted); margin-top:8px;">Capture the essence of your journey in one compelling line.</p>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <label style="display:block; margin-bottom:8px; color:var(--sand); font-weight:500;">Your Journey (Content)</label>
+          {{ form.content }}
+          <p style="font-size:12px; color:var(--muted); margin-top:8px;">Share your challenges, the turning points, and key advice for students.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
+          <div>
+            <label style="display:block; margin-bottom:8px; color:var(--sand); font-weight:500;">Thumbnail Image</label>
+            {{ form.thumbnail }}
+            <p style="font-size:12px; color:var(--muted); margin-top:8px;">Upload a photo of yourself or something that represents your story.</p>
+          </div>
+          <div>
+            <label style="display:block; margin-bottom:8px; color:var(--sand); font-weight:500;">Tags</label>
+            {{ form.tags }}
+            <p style="font-size:12px; color:var(--muted); margin-top:8px;">Comma-separated (e.g., Engineering, Startup, Scholarship)</p>
+          </div>
+        </div>
+
+        <div style="padding: 20px; background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; margin-bottom: 30px;">
+          <p style="font-size: 13px; color: var(--gold); line-height: 1.6;">
+            <strong>Note:</strong> Your story will be submitted for review. Once approved by our team, it will be featured on the Success Stories page to inspire the community.
+          </p>
+        </div>
+
+        <button type="submit" class="btn-primary">Submit Story for Review</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .glass-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 15px;
+    color: #fff;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+  .glass-input:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.08);
+  }
+  .file-input {
+    color: var(--muted);
+    font-size: 14px;
+  }
+</style>
+{% endblock %}

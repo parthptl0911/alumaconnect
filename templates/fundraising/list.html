@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}{{ site_name }}{% endblock %}
+{% block content %}
+<!-- ═══════════ FUNDRAISING ═══════════ -->
+<section class="fundraising" id="s6">
+  <div class="fundraising-inner">
+    <div>
+      <div class="section-eyebrow">
+        <div class="section-eyebrow-line"></div>
+        <span class="section-eyebrow-text">Fundraising</span>
+      </div>
+      <h2 class="section-title">Give Back to<br><em>Your Roots</em></h2>
+      <p class="section-sub" style="margin-bottom:40px;">
+        Support the next generation. Every contribution, big or small, shapes the future of our college community.
+      </p>
+      {% if messages %}
+        <div class="messages">
+          {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: rgba(0, 255, 163, 0.1); border: 1px solid rgba(0, 255, 163, 0.2); color: #00ffa3;">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="campaigns-grid" style="display: flex; flex-direction: column; gap: 32px;">
+        {% for campaign in campaigns %}
+        <div class="campaign-card">
+          <div class="campaign-card-img">
+            {% if campaign.image %}
+              <img src="{{ campaign.image.url }}" alt="{{ campaign.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+            {% else %}
+              🏗️
+            {% endif %}
+          </div>
+          <div class="campaign-card-body">
+            <a href="{% url 'fundraising:detail' campaign.id %}" style="text-decoration: none; color: inherit;">
+              <div class="campaign-title">{{ campaign.title }}</div>
+            </a>
+            <div class="campaign-desc">{{ campaign.description|truncatewords:20 }}</div>
+            <div class="campaign-progress-label">
+              <span class="campaign-raised">₹{{ campaign.current_amount }} raised</span>
+              <span>of ₹{{ campaign.target_amount }} goal</span>
+            </div>
+            <div class="campaign-bar"><div class="campaign-fill" style="width:{{ campaign.progress_percentage }}%"></div></div>
+            <div class="campaign-stats">
+              <div class="campaign-stat-item">
+                <div class="campaign-stat-n">{{ campaign.donations.count }}</div>
+                <div class="campaign-stat-l">Donors</div>
+              </div>
+              <div class="campaign-stat-item">
+                <div class="campaign-stat-n">{{ campaign.days_left }}</div>
+                <div class="campaign-stat-l">Days Left</div>
+              </div>
+              <div class="campaign-stat-item">
+                <div class="campaign-stat-n">₹{{ campaign.target_amount|default:0 }}</div>
+                <div class="campaign-stat-l">Target</div>
+              </div>
+            </div>
+            <a href="{% url 'fundraising:detail' campaign.id %}" class="btn-donate">View Details & Donate</a>
+          </div>
+        </div>
+        {% empty %}
+        <div class="campaign-card">
+          <div class="campaign-card-body">
+             <div class="campaign-title">No Active Campaigns</div>
+             <p>Check back later for new fundraising initiatives.</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="donation-summary">
+      <div class="donation-summary-header">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">Total Raised (Overall)</div>
+        <div class="donation-total">₹{{ total_raised }}</div>
+        <div class="donation-total-label">from {{ total_donors }} donors across the community</div>
+      </div>
+      <div style="padding:16px 24px;border-bottom:1px solid var(--border);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:12px;">Recent Contributions</div>
+      </div>
+      <div class="donation-list">
+        {% for donation in recent_donations %}
+        <div class="donation-item">
+          <div class="donation-av av-{{ forloop.counter|add:1 }}">{{ donation.donor.full_name|first|upper }}</div>
+          <div class="donation-info">
+            <div class="donation-name">{{ donation.donor.full_name }}</div>
+            <div class="donation-when">{{ donation.donated_at|timesince }} ago · {{ donation.campaign.title|truncatechars:15 }}</div>
+          </div>
+          <div class="donation-amount">₹{{ donation.amount }}</div>
+        </div>
+        {% empty %}
+        <div class="donation-item">
+           <div class="donation-info">No recent donations yet.</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

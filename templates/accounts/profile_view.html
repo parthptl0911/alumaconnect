@@ -1,0 +1,490 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.full_name }} — {{ site_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Profile Page Layout ── */
+.profile-page {
+  padding: 100px 40px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── Left Card ── */
+.profile-left {
+  position: sticky;
+  top: 90px;
+}
+
+.profile-left-card {
+  background: rgba(14, 14, 18, 0.7);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+
+.profile-banner {
+  height: 80px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.25) 0%, rgba(42,53,72,0.5) 100%);
+  position: relative;
+}
+
+.profile-av-wrap {
+  position: absolute;
+  bottom: -36px;
+  left: 24px;
+}
+
+.profile-av {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), #8f722a);
+  border: 3px solid rgba(14,14,18,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ff-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+}
+.profile-av img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.profile-left-body {
+  padding: 50px 24px 24px;
+}
+
+.profile-name {
+  font-family: var(--ff-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--sand);
+  margin-bottom: 4px;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 14px;
+  background: rgba(201,168,76,0.12);
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.3);
+}
+
+.profile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+.profile-meta-item {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.profile-meta-item span:first-child {
+  font-size: 14px;
+}
+
+.profile-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.skill-badge {
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.profile-left-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.profile-left-actions a {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.25s;
+}
+
+.btn-msg {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: var(--ink);
+}
+.btn-msg:hover { opacity: 0.88; }
+
+.btn-back {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.btn-back:hover { border-color: var(--gold); color: var(--sand); }
+
+.btn-edit {
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--gold);
+}
+.btn-edit:hover { background: rgba(201,168,76,0.16); }
+
+/* ── Right Content ── */
+.profile-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-section-card {
+  background: rgba(14, 14, 18, 0.7);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.3s;
+}
+.profile-section-card:hover {
+  border-color: rgba(201,168,76,0.25);
+}
+
+.ps-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* About */
+.about-text {
+  font-size: 14px;
+  color: var(--sand);
+  line-height: 1.7;
+}
+
+/* Detail grid */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.detail-cell {}
+.detail-cell-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 4px;
+}
+.detail-cell-value {
+  font-size: 14px;
+  color: var(--sand);
+}
+
+/* Stories items */
+.content-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.content-item:last-child { border-bottom: none; padding-bottom: 0; }
+.content-item:first-child { padding-top: 0; }
+
+.content-thumb {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  object-fit: cover;
+}
+
+.content-info { flex: 1; min-width: 0; }
+.content-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sand);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.content-meta { font-size: 11px; color: var(--muted); }
+
+.content-action {
+  font-size: 11px;
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: all 0.25s;
+}
+.content-action:hover { border-color: var(--gold); color: var(--gold); }
+
+.empty-state {
+  text-align: center;
+  padding: 24px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Messages / flash */
+.flash-msg {
+  background: rgba(93,184,130,0.1);
+  border: 1px solid rgba(93,184,130,0.4);
+  color: #5db882;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+  .profile-left { position: static; }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .profile-page { padding: 90px 16px 40px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="flash-msg">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="profile-grid">
+
+    <!-- ═══════════════════════════════
+         LEFT: Identity Card
+         ═══════════════════════════════ -->
+    <aside class="profile-left">
+      <div class="profile-left-card">
+        <div class="profile-banner">
+          <div class="profile-av-wrap">
+            <div class="profile-av">
+              {% if profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="Avatar">
+              {% else %}
+                {{ profile_user.first_name|make_list|first|upper }}{{ profile_user.last_name|make_list|first|upper }}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-left-body">
+          <div class="profile-name">{{ profile_user.full_name|truncatechars:26 }}</div>
+          <span class="profile-role-badge">{{ profile_user.role }}</span>
+
+          <div class="profile-meta">
+            {% if profile.company %}
+              <div class="profile-meta-item"><span>🏢</span> {{ profile.company }}</div>
+            {% endif %}
+            {% if profile.location %}
+              <div class="profile-meta-item"><span>📍</span> {{ profile.location }}</div>
+            {% endif %}
+            {% if profile.designation %}
+              <div class="profile-meta-item"><span>💼</span> {{ profile.designation }}</div>
+            {% endif %}
+            {% if profile.graduation_year %}
+              <div class="profile-meta-item"><span>🎓</span> Class of {{ profile.graduation_year }}</div>
+            {% endif %}
+            {% if profile.current_year %}
+              <div class="profile-meta-item"><span>📚</span> Year {{ profile.current_year }}</div>
+            {% endif %}
+          </div>
+
+          {% if skills_list %}
+          <div class="profile-skills">
+            {% for skill in skills_list %}
+              <span class="skill-badge">{{ skill }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="profile-left-actions">
+            {% if request.user != profile_user %}
+              <a href="{% url 'chat:start' profile_user.id %}" class="btn-msg">💬 Message</a>
+              {% if request.user.role == 'student' and profile_user.role == 'alumni' %}
+                <a href="{% url 'mentorship:send_request' profile_user.id %}" class="btn-back">🤝 Request Mentorship</a>
+              {% endif %}
+            {% endif %}
+            {% if request.user == profile_user and profile_user.role != 'admin' %}
+              <a href="{% url 'accounts:profile_edit' %}" class="btn-edit">✏️ Edit Profile</a>
+            {% endif %}
+            {% if source == 'directory' %}
+              <a href="{% url 'alumni:alumni_list' %}" class="btn-back">← Back to Directory</a>
+            {% elif source == 'mentorship' %}
+              <a href="{% url 'mentorship:index' %}" class="btn-back">← Back to Mentorship</a>
+            {% else %}
+              <a href="{% url 'accounts:dashboard' %}" class="btn-back">← Dashboard</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══════════════════════════════
+         RIGHT: Content Sections
+         ═══════════════════════════════ -->
+    <div class="profile-right">
+
+      <!-- About / Details -->
+      <div class="profile-section-card">
+        <div class="ps-title">🪪 About</div>
+        {% if profile.bio %}
+          <p class="about-text">{{ profile.bio }}</p>
+          <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);"></div>
+        {% endif %}
+        <div class="detail-grid">
+          <div class="detail-cell">
+            <div class="detail-cell-label">Role</div>
+            <div class="detail-cell-value" style="text-transform:capitalize;">{{ profile_user.role }}</div>
+          </div>
+          {% if profile.company %}
+          <div class="detail-cell">
+            <div class="detail-cell-label">Company</div>
+            <div class="detail-cell-value">{{ profile.company }}</div>
+          </div>
+          {% endif %}
+          {% if profile.designation %}
+          <div class="detail-cell">
+            <div class="detail-cell-label">Designation</div>
+            <div class="detail-cell-value">{{ profile.designation }}</div>
+          </div>
+          {% endif %}
+          {% if profile.location %}
+          <div class="detail-cell">
+            <div class="detail-cell-label">Location</div>
+            <div class="detail-cell-value">{{ profile.location }}</div>
+          </div>
+          {% endif %}
+          {% if profile.graduation_year %}
+          <div class="detail-cell">
+            <div class="detail-cell-label">Graduation Year</div>
+            <div class="detail-cell-value">{{ profile.graduation_year }}</div>
+          </div>
+          {% endif %}
+          {% if profile.current_year %}
+          <div class="detail-cell">
+            <div class="detail-cell-label">Current Year</div>
+            <div class="detail-cell-value">{{ profile.current_year }}</div>
+          </div>
+          {% endif %}
+          {% if profile.linkedin %}
+          <div class="detail-cell" style="grid-column: 1 / -1;">
+            <div class="detail-cell-label">LinkedIn</div>
+            <div class="detail-cell-value">
+              <a href="{{ profile.linkedin }}" target="_blank" style="color:var(--gold);">{{ profile.linkedin|truncatechars:46 }}</a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Jobs Posted (Alumni only) -->
+      {% if profile_user.role == 'alumni' %}
+      <div class="profile-section-card">
+        <div class="ps-title">💼 Jobs Posted
+          <span style="margin-left:auto; font-weight:400; font-size:11px; color:var(--muted); text-transform:none; letter-spacing:0;">{{ jobs|length }} listing{{ jobs|length|pluralize }}</span>
+        </div>
+        {% if jobs %}
+          {% for job in jobs %}
+          <div class="content-item">
+            <div class="content-thumb" style="background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2);">🏢</div>
+            <div class="content-info">
+              <div class="content-title">{{ job.title }}</div>
+              <div class="content-meta">{{ job.company }} · {{ job.location }} · <span style="text-transform:capitalize;">{{ job.get_job_type_display }}</span> · Deadline {{ job.deadline|date:"d M Y" }}</div>
+            </div>
+            <a href="{% url 'jobs:job_detail' job.id %}" class="content-action">View</a>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">No jobs posted yet.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- Stories -->
+      <div class="profile-section-card">
+        <div class="ps-title">✍️ Stories
+          <span style="margin-left:auto; font-weight:400; font-size:11px; color:var(--muted); text-transform:none; letter-spacing:0;">{{ stories|length }} published</span>
+        </div>
+        {% if stories %}
+          {% for story in stories %}
+          <div class="content-item">
+            {% if story.thumbnail %}
+              <img src="{{ story.thumbnail.url }}" class="content-thumb" alt="thumb" style="border-radius:10px;">
+            {% else %}
+              <div class="content-thumb" style="background:linear-gradient(135deg,var(--gold),var(--gold-light));">✍️</div>
+            {% endif %}
+            <div class="content-info">
+              <div class="content-title">{{ story.title }}</div>
+              <div class="content-meta">{{ story.submitted_at|date:"d M Y" }}{% if story.tags %} · {{ story.tags|truncatechars:30 }}{% endif %}</div>
+            </div>
+            <a href="{% url 'stories:detail' story.id %}" class="content-action">Read</a>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">No published stories yet.</div>
+        {% endif %}
+      </div>
+
+    </div><!-- /.profile-right -->
+  </div><!-- /.profile-grid -->
+</div>
+{% endblock %}

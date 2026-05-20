@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}{{ site_name }}{% endblock %}
+{% block content %}
+<!-- ═══════════ STORIES ═══════════ -->
+<section class="stories" id="s7">
+  <div class="stories-header">
+    <div>
+      <div class="section-eyebrow">
+        <div class="section-eyebrow-line"></div>
+        <span class="section-eyebrow-text">Success Stories</span>
+      </div>
+      <h2 class="section-title">Journeys That<br><em>Inspire</em></h2>
+    </div>
+    {% if user.role == 'alumni' %}
+    <a href="{% url 'stories:submit' %}" class="btn-primary" style="padding: 10px 20px; border-radius: 8px;">Share Your Story +</a>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+    <div class="messages" style="margin-bottom: 30px;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" style="padding: 15px; border-radius: 8px; background: rgba(0, 255, 163, 0.1); border: 1px solid rgba(0, 255, 163, 0.2); color: #00ffa3;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="stories-grid">
+    {% if featured_story %}
+    <div class="story-card-featured">
+      <div class="story-featured-top">
+        {% if featured_story.thumbnail %}
+          <img src="{{ featured_story.thumbnail.url }}" alt="{{ featured_story.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+        {% else %}
+          <div class="story-featured-overlay"></div>
+        {% endif %}
+        <div class="story-featured-quote">{{ featured_story.title }}</div>
+      </div>
+      <div class="story-featured-body">
+        <div class="story-author">
+          <div class="story-author-av av-1">{{ featured_story.author.full_name|first|upper }}</div>
+          <div>
+            <div class="story-author-name">{{ featured_story.author.full_name }}</div>
+            <div class="story-author-role">{{ site_name }} Alumnus · Batch {{ featured_story.author.alumni_profile.graduation_year|default:'(N/A)' }}</div>
+          </div>
+        </div>
+        <div class="story-title">{{ featured_story.title }}</div>
+        <div class="story-excerpt">{{ featured_story.content|truncatewords:30 }}</div>
+      </div>
+      <div class="story-footer">
+        <div style="display:flex;gap:12px; flex-wrap: wrap;">
+          {% for tag in featured_story.tags.split %}
+            <span class="tag tag-gold">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        <a href="{% url 'stories:detail' featured_story.id %}" class="story-read">Read Full Story <span>→</span></a>
+      </div>
+    </div>
+
+    {% for story in other_stories %}
+    <div class="story-card-small">
+      <div class="story-small-banner" style="background:linear-gradient(135deg,#1A3A2A,#2D5A40);">
+        {% if story.thumbnail %}
+          <img src="{{ story.thumbnail.url }}" alt="{{ story.title }}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+        {% else %}
+          ⚡
+        {% endif %}
+      </div>
+      <div class="story-small-body">
+        <div class="story-small-title">{{ story.title }}</div>
+        <div class="story-small-author">{{ story.author.full_name }} · Batch {{ story.author.alumni_profile.graduation_year|default:'(N/A)' }}</div>
+        <div class="story-small-excerpt">{{ story.content|truncatewords:15 }}</div>
+      </div>
+      <div class="story-small-footer">
+        <a href="{% url 'stories:detail' story.id %}" class="story-read" style="font-size:11px;">Read Full Story →</a>
+      </div>
+    </div>
+    {% endfor %}
+    
+    {% else %}
+    <div class="glass-card" style="grid-column: 1 / -1; padding: 60px; text-align: center;">
+      <h3 style="color: var(--sand); margin-bottom: 10px;">Inspiring stories coming soon!</h3>
+      <p style="color: var(--muted);">Be the first to share your journey with the community.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div class="pagination-bar">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">← Prev</a>
+    {% else %}
+      <span class="page-btn disabled">← Prev</span>
+    {% endif %}
+    <span class="page-btn active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="page-btn">Next →</a>
+    {% else %}
+      <span class="page-btn disabled">Next →</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

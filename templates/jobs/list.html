@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}{{ site_name }}{% endblock %}
+{% block content %}
+<!-- ═══════════ JOBS ═══════════ -->
+<section class="jobs" id="s4">
+  <div class="jobs-inner">
+    <div>
+      <div class="section-eyebrow">
+        <div class="section-eyebrow-line"></div>
+        <span class="section-eyebrow-text">Job Portal</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 class="section-title" style="margin-bottom:0;">Opportunities<br>from <em>Inside</em><br>the Network</h2>
+        {% if user.role == 'alumni' %}
+        <a href="{% url 'jobs:post_job' %}" class="btn-connect" style="text-decoration:none; height:fit-content; background:var(--gold); color:#000;">Post a Job</a>
+        {% endif %}
+      </div>
+      <p class="section-sub" style="margin-bottom:40px;">
+        Every job here comes from a verified alumnus. Real referrals, real advantage — not just another job board.
+      </p>
+      
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert {{ message.tags }}" style="margin-bottom: 20px; color: {% if message.tags == 'error' %}#ff4d4d{% else %}#00ffa3{% endif %};">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="jobs-list">
+        {% for job in page_obj %}
+        <a href="{% url 'jobs:job_detail' job.id %}" class="job-card" style="text-decoration:none; color:inherit; display:block;">
+          <div class="job-card-top">
+            <div class="job-company-logo job-logo-{{ forloop.counter }}">{{ job.company|make_list|first|upper }}</div>
+          </div>
+          <div class="job-title">{{ job.title }}</div>
+          <div class="job-company">{{ job.company }} · {{ job.location }}</div>
+          <div class="job-meta">
+            <div class="job-meta-item">🕐 {{ job.get_job_type_display }}</div>
+            <div class="job-meta-item">📍 {{ job.location }}</div>
+            {% if job.salary_range %}<div class="job-meta-item">💰 {{ job.salary_range }}</div>{% endif %}
+          </div>
+        </a>
+        {% empty %}
+        <p style="color: var(--muted); padding: 40px; text-align: center;">No active job opportunities found.</p>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <div class="pagination-bar">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">← Prev</a>
+        {% else %}
+          <span class="page-btn disabled">← Prev</span>
+        {% endif %}
+        <span class="page-btn active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}" class="page-btn">Next →</a>
+        {% else %}
+          <span class="page-btn disabled">Next →</span>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="job-detail">
+      {% if page_obj %}
+        {% with job=page_obj.object_list.0 %}
+        <div class="job-detail-header">
+          <div class="job-detail-logo">{{ job.company|make_list|first|upper }}</div>
+          <div class="job-detail-title">{{ job.title }}</div>
+          <div class="job-detail-company">{{ job.company }} · {{ job.location }}</div>
+          <div class="job-detail-tags">
+            <span class="tag tag-forest">{{ job.get_job_type_display }}</span>
+            <span class="tag tag-gold">Active</span>
+            {% if job.salary_range %}<span class="tag tag-slate">{{ job.salary_range }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="job-detail-body">
+          <div class="job-section-label">Posted by Alumni</div>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
+            <div class="ment-req-av" style="width:32px;height:32px;font-size:12px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;">{{ job.posted_by.full_name|make_list|first|upper }}</div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--sand);">{{ job.posted_by.full_name }}</div>
+              <div style="font-size:11px;color:var(--gold);">Alumni Member</div>
+            </div>
+          </div>
+          <div class="job-section-label">Description</div>
+          <div class="job-desc">{{ job.description|linebreaksbr }}</div>
+          <div class="job-section-label">Requirements</div>
+          <div class="job-desc">{{ job.requirements|linebreaksbr }}</div>
+        </div>
+        <div class="job-detail-footer">
+          <a href="{% url 'jobs:job_detail' job.id %}" class="btn-apply" style="text-decoration:none; text-align:center;">View & Apply</a>
+        </div>
+        {% endwith %}
+      {% else %}
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--muted);">
+           <p>Select an opportunity to view details</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

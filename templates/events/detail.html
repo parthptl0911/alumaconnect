@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Event Details | {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="event-detail" style="padding: 120px 5% 60px;">
+    <div class="event-detail-container" style="max-width: 900px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--border); border-radius: 30px; overflow: hidden; backdrop-filter: blur(20px);">
+        
+        <div class="event-detail-header" style="padding: 40px; background: linear-gradient(135deg, rgba(88, 101, 242, 0.1), rgba(0, 0, 0, 0)); border-bottom: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div class="event-date-badge" style="background: var(--accent); color: white; padding: 10px 20px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; line-height: 1;">{{ event.date|date:"d" }}</div>
+                    <div style="font-size: 12px; text-transform: uppercase;">{{ event.date|date:"M Y" }}</div>
+                </div>
+                <div class="event-type-tag" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 5px 15px; border-radius: 20px; font-size: 12px; color: var(--muted);">
+                    {{ event.get_event_type_display }}
+                </div>
+            </div>
+            <h1 style="font-size: 36px; margin-bottom: 15px; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ event.title }}</h1>
+            <div style="display: flex; gap: 20px; color: var(--muted); font-size: 14px;">
+                <span>📍 {{ event.location }}</span>
+                <span>🕐 {{ event.time|time:"g:i A" }}</span>
+                <span>👥 {{ event.attendee_count }} / {{ event.capacity }} Attending</span>
+            </div>
+        </div>
+
+        <div class="event-detail-body" style="padding: 40px;">
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 15px; color: white;">About the Event</h3>
+                <p style="color: var(--muted); line-height: 1.6; font-size: 16px;">{{ event.description|linebreaks }}</p>
+            </div>
+
+            <div class="rsvp-section" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 30px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin-bottom: 5px; color: white;">RSVP Status</h4>
+                    <p style="font-size: 13px; color: var(--muted);">
+                        {% if user_rsvp %}
+                            You are currently: <strong>{{ user_rsvp.get_status_display }}</strong>
+                        {% else %}
+                            You haven't RSVP'd yet.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    {% if event.is_full and not user_rsvp.status == 'attending' %}
+                        <div style="color: var(--accent); font-weight: 600; padding: 12px 24px; border: 1px solid var(--accent); border-radius: 30px;">
+                            Event Full
+                        </div>
+                    {% else %}
+                        <form action="{% url 'events:rsvp' event.id %}" method="POST" style="display: flex; gap: 10px;">
+                            {% csrf_token %}
+                            {% if user_rsvp.status == 'attending' %}
+                                    <button type="submit" name="status" value="not_attending" class="btn-primary">Cancel Attendance</button>
+                            {% else %}
+                                <button type="submit" name="status" value="attending" class="btn-primary">Attending</button>
+                            {% endif %}
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="event-detail-footer" style="padding: 20px 40px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <a href="{% url 'events:list' %}" style="color: var(--muted); text-decoration: none; font-size: 14px;">← Back to All Events</a>
+            <span style="font-size: 12px; color: var(--muted);">Organized by {{ event.created_by.full_name }}</span>
+        </div>
+    </div>
+</section>
+
+{% if messages %}
+<div class="messages-container" style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
+    {% for message in messages %}
+    <div class="message {{ message.tags }}" style="background: var(--card-bg); border: 1px solid var(--border); padding: 15px 25px; border-radius: 12px; margin-top: 10px; backdrop-filter: blur(10px); color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.message').forEach(m => m.style.display = 'none');
+    }, 5000);
+</script>
+{% endif %}
+{% endblock %}

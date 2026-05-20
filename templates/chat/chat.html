@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Messages — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="chat-section">
+    <div class="chat-container">
+        <!-- Sidebar: Conversations List -->
+        <aside class="chat-sidebar">
+            <div class="chat-sidebar-header">
+                <h2 class="chat-sidebar-title">Conversations</h2>
+            </div>
+            <div class="conv-list">
+                {% for item in conversations_data %}
+                    {% with other=item.other_user %}
+                    <a href="{% url 'chat:conversation_detail' item.conversation.id %}" class="conv-item {% if active_conversation.id == item.conversation.id %}active{% endif %}">
+                        <div class="conv-av">
+                            {% if other.profile.profile_image %}
+                                <img src="{{ other.profile.profile_image.url }}" alt="AV" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                            {% else %}
+                                {{ other.full_name|make_list|first|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="conv-info">
+                            <div class="conv-name">{{ other.full_name|truncatechars:22 }}</div>
+                            <div class="conv-last">
+                                {% if item.last_message %}
+                                    {{ item.last_message.content|truncatechars:30 }}
+                                {% else %}
+                                    No messages yet
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endwith %}
+                {% empty %}
+                    <div style="padding: 24px; text-align: center; color: var(--muted); font-size: 13px;">
+                        No conversations yet.
+                    </div>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-main">
+            {% if active_conversation %}
+                <div class="chat-header">
+                    <div class="conv-av" style="width: 36px; height: 36px; font-size: 14px;">
+                        {% if other_user.profile.profile_image %}
+                            <img src="{{ other_user.profile.profile_image.url }}" alt="AV" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        {% else %}
+                            {{ other_user.full_name|make_list|first|upper }}
+                        {% endif %}
+                    </div>
+                    <div class="chat-header-name">{{ other_user.full_name }}</div>
+                </div>
+
+                <div class="message-feed" id="messageFeed">
+                    {% for message in messages %}
+                        <div class="message-bubble {% if message.sender == user %}message-sent{% else %}message-received{% endif %}">
+                            {{ message.content }}
+                            <span class="message-time">
+                                {{ message.timestamp|date:"P" }}
+                                {% if message.sender == user %}
+                                    <span class="message-status" style="margin-left: 4px; font-size: 11px;">
+                                        {% if message.is_seen %}✔✔{% else %}✔{% endif %}
+                                    </span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    {% empty %}
+                        <div class="empty-chat">
+                            <p>This is the start of your conversation with <strong>{{ other_user.full_name }}</strong>.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="chat-input-area">
+                    <form method="POST" class="chat-form">
+                        {% csrf_token %}
+                        <input type="text" name="content" class="chat-input" placeholder="Type your message..." autocomplete="off" required autofocus>
+                        <button type="submit" class="btn-primary" style="width:auto; height:45px; padding:0 20px; border-radius:12px;">Send</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="empty-chat">
+                    <div style="font-size: 48px; margin-bottom: 20px;">💬</div>
+                    <h3 style="color: var(--sand); margin-bottom: 12px;">Select a conversation</h3>
+                    <p>Choose an existing thread from the left or start a new one from the Alumni Directory.</p>
+                </div>
+            {% endif %}
+        </main>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-scroll to bottom of message feed
+    const feed = document.getElementById('messageFeed');
+    if (feed) {
+        feed.scrollTop = feed.scrollHeight;
+    }
+</script>
+{% endblock %}

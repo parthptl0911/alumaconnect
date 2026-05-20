@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile — {{ site_name }}{% endblock %}
+
+{% block extra_css %}
+<!-- Reusing the exact layout parameters from profile_view but adapting for Forms -->
+<style>
+.profile-container {
+    padding: 120px 20px 60px;
+    display: flex;
+    justify-content: center;
+}
+.profile-card {
+    background: rgba(20, 20, 25, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 600px;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+}
+.profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.5;
+}
+.profile-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+.profile-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: #fff;
+    margin-bottom: 8px;
+}
+.profile-title em {
+    color: var(--gold);
+    font-style: italic;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sand);
+}
+.form-input {
+    background: rgba(10, 10, 15, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+.form-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.1);
+}
+.btn-submit {
+    background: var(--gold);
+    color: #0A0A0F;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-submit:hover {
+    background: #e6c561;
+    transform: translateY(-2px);
+}
+.profile-actions {
+    margin-top: 32px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.error-msg {
+    color: #E88080;
+    font-size: 11px;
+    margin-top: -4px;
+}
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255,255,255,0.1);
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--sand);
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: var(--gold);
+}
+input:checked + .slider:before {
+  transform: translateX(20px);
+  background-color: #000;
+}
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <h1 class="profile-title">Edit <em>Profile</em></h1>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div style="background: rgba(232, 128, 128, 0.1); border: 1px solid #E88080; color: #E88080; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}<br>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+            <div class="form-group" {% if field.name == 'is_mentor_available' %}style="flex-direction:row; justify-content:space-between; align-items:center; background:rgba(212,175,55,0.05); padding:16px; border-radius:12px; border:1px solid rgba(212,175,55,0.1); margin-top:10px;"{% endif %}>
+                {% if field.name == 'is_mentor_available' %}
+                    <div style="flex:1;">
+                        <label for="{{ field.id_for_label }}" style="margin-bottom:2px; font-weight:600; color:var(--gold);">{{ field.label }}</label>
+                        {% if field.help_text %}
+                            <div style="font-size: 11px; color: var(--muted); line-height:1.4; margin-top:4px;">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <label class="switch">
+                        {{ field }}
+                        <span class="slider round"></span>
+                    </label>
+                {% else %}
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <span style="font-size: 11px; color: var(--muted);">{{ field.help_text }}</span>
+                    {% endif %}
+                {% endif %}
+                {% if field.errors %}
+                    <div class="error-msg">{{ field.errors.0 }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="profile-actions">
+                <button type="submit" class="btn-primary">Save Changes</button>
+                <a href="{% url 'accounts:profile_view' %}" class="btn-outline" style="text-decoration:none;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

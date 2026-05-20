@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Applicants for {{ job.title }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="applicants-section" style="padding-top: 120px; padding-bottom: 80px;">
+    <div class="container" style="max-width: 1000px; margin: 0 auto; width: 90%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <div>
+                <a href="{% url 'jobs:job_detail' job.id %}" style="color:var(--muted); text-decoration:none; font-size:14px;">← Back to Job Detail</a>
+                <h2 style="font-size:32px; color:var(--sand); margin:10px 0 5px;">Applicants for <em>{{ job.title }}</em></h2>
+                <p style="color:var(--muted); font-size:14px;">Review candidates and update their hiring status.</p>
+            </div>
+            <div class="glass-card" style="padding:10px 20px; border-radius:12px; background:rgba(255,255,255,0.05);">
+                <span style="font-size:24px; font-weight:700; color:var(--gold);">{{ applications.count }}</span>
+                <span style="font-size:12px; color:var(--muted); text-transform:uppercase; margin-left:8px;">Total Candidates</span>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {{ message.tags }}" style="margin-bottom: 20px; color: {% if message.tags == 'error' %}#ff4d4d{% else %}#00ffa3{% endif %};">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="applicants-list" style="display: flex; flex-direction: column; gap: 15px;">
+            {% for app in applications %}
+            <div class="glass-card" style="padding:24px; border-radius:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: start;">
+                <div style="width:50px; height:50px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; font-weight:600;">{{ app.full_name|default:app.applicant.full_name|make_list|first|upper }}</div>
+                
+                <div>
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:5px;">
+                        <h3 style="font-size:18px; margin:0; color:#fff;">{{ app.full_name|default:app.applicant.full_name }}</h3>
+                        <p style="font-size:12px; color:var(--muted); margin:0;">({{ app.email|default:app.applicant.email }})</p>
+                        <span style="padding:4px 10px; border-radius:100px; font-size:10px; font-weight:700; text-transform:uppercase; background:rgba(255,255,255,0.05); color:{% if app.status == 'accepted' %}#00ffa3{% elif app.status == 'rejected' %}#ff4d4d{% elif app.status == 'reviewed' %}var(--gold){% else %}var(--sand){% endif %}; border: 1px solid currentColor;">{{ app.status }}</span>
+                    </div>
+                    <div style="font-size:13px; color:var(--muted); margin-bottom:15px;">Applied {{ app.applied_at|timesince }} ago</div>
+                    
+                    {% if app.cover_letter %}
+                    <div style="background:rgba(255,255,255,0.02); padding:15px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); font-size:14px; color:var(--muted); line-height:1.6;">
+                        "{{ app.cover_letter|linebreaksbr }}"
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:10px; min-width: 180px;">
+                    <a href="{{ app.resume.url }}" target="_blank" class="btn-connect" style="text-decoration:none; text-align:center; padding:10px; font-size:12px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);">View Resume</a>
+                    
+                    <form method="POST" action="{% url 'jobs:update_application_status' app.id %}" style="display:flex; flex-direction:column; gap:5px;">
+                        {% csrf_token %}
+                        <select name="status" class="glass-input" style="font-size:11px; padding:8px; height:auto;">
+                            <option value="applied" {% if app.status == 'applied' %}selected{% endif %}>Mark Applied</option>
+                            <option value="reviewed" {% if app.status == 'reviewed' %}selected{% endif %}>Mark Reviewed</option>
+                            <option value="accepted" {% if app.status == 'accepted' %}selected{% endif %}>Mark Accepted</option>
+                            <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Mark Rejected</option>
+                        </select>
+                        <button type="submit" class="btn-primary">Update Status</button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div style="padding:80px; text-align:center; color:var(--muted);">
+                <p>No applications received for this job yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+    .glass-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px;
+        color: #fff;
+    }
+    .glass-input:focus { outline: none; border-color: var(--gold); }
+</style>
+{% endblock %}

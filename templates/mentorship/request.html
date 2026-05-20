@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Mentorship — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="auth-section" style="padding-top: 150px; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+    <div class="glass-card" style="width: 100%; max-width: 600px; padding: 40px; position: relative; overflow: hidden;">
+        <div class="section-eyebrow">
+            <div class="section-eyebrow-line"></div>
+            <span class="section-eyebrow-text">Mentorship Request</span>
+        </div>
+        <h2 class="section-title" style="font-size: 32px; margin-bottom: 10px;">Request Guidance from<br><em>{{ mentor.full_name|truncatechars:25 }}</em></h2>
+        <p class="section-sub" style="margin-bottom: 30px;">Share your goals and why you want to connect with this mentor.</p>
+
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {{ message.tags }}" style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; color: var(--muted); font-size: 14px; margin-bottom: 8px;">Mentorship Goal</label>
+                {{ form.goal }}
+                {% if form.goal.errors %}
+                    <span class="error-text" style="color: #ff4d4d; font-size: 12px; margin-top: 4px; display: block;">{{ form.goal.errors }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 30px;">
+                <label style="display: block; color: var(--muted); font-size: 14px; margin-bottom: 8px;">Your Message</label>
+                {{ form.message }}
+                {% if form.message.errors %}
+                    <span class="error-text" style="color: #ff4d4d; font-size: 12px; margin-top: 4px; display: block;">{{ form.message.errors }}</span>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 10px;">
+                <button type="submit" class="btn-primary">Send Request</button>
+                <a href="{% url 'alumni:alumni_list' %}" class="btn-secondary" style="flex: 1; height: 50px; display: flex; align-items:center; justify-content:center; text-decoration:none; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: var(--sand);">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<style>
+    .glass-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        padding: 14px 18px !important;
+        color: #fff !important;
+        font-family: inherit !important;
+        transition: all 0.3s ease !important;
+    }
+    .glass-input:focus {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: var(--gold) !important;
+        outline: none !important;
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.1) !important;
+    }
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .alert.success { color: #00ffa3 !important; }
+    .alert.error { color: #ff4d4d !important; }
+    .alert.warning { color: var(--gold) !important; }
+</style>
+{% endblock %}

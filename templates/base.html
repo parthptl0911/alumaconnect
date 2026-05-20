@@ -1,0 +1,199 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ site_name }} — Alumni Networking Platform{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}?v=responsive_fix">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Prototype Nav Dots -->
+<div class="proto-nav">
+  <div class="proto-dot active" onclick="scrollToSection(0)"></div>
+  <div class="proto-dot" onclick="scrollToSection(1)"></div>
+  <div class="proto-dot" onclick="scrollToSection(2)"></div>
+  <div class="proto-dot" onclick="scrollToSection(3)"></div>
+  <div class="proto-dot" onclick="scrollToSection(4)"></div>
+  <div class="proto-dot" onclick="scrollToSection(5)"></div>
+  <div class="proto-dot" onclick="scrollToSection(6)"></div>
+  <div class="proto-dot" onclick="scrollToSection(7)"></div>
+</div>
+
+{% include 'components/navbar.html' %}
+
+{% block content %}{% endblock %}
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="nav-logo" style="margin-bottom:16px;">
+        <div class="nav-logo-mark">A</div>
+        <span class="nav-logo-text">Aluma<span>Connect</span></span>
+      </div>
+      <p class="footer-brand-desc">
+        A verified, premium alumni networking platform built for college communities. Mentorship, jobs, events, and giving back — all in one place.
+      </p>
+    </div>
+    <div>
+      <div class="footer-col-title">Platform</div>
+      <ul class="footer-links">
+        <li><a href="#">Alumni Directory</a></li>
+        <li><a href="#">Mentorship</a></li>
+        <li><a href="#">Job Portal</a></li>
+        <li><a href="#">Events</a></li>
+        <li><a href="#">Fundraising</a></li>
+        <li><a href="#">Success Stories</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">For Colleges</div>
+      <ul class="footer-links">
+        <li><a href="#">Admin Panel</a></li>
+        <li><a href="#">Whitelist Setup</a></li>
+        <li><a href="#">Analytics</a></li>
+        <li><a href="#">Bulk Import</a></li>
+        <li><a href="#">Documentation</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Support</div>
+      <ul class="footer-links">
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Use</a></li>
+        <li><a href="#">Contact Us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 {{ site_name }}. All rights reserved. Built for Indian college communities.</div>
+    <div class="footer-built">Built with Django · PostgreSQL · Razorpay</div>
+  </div>
+</footer>
+
+<!-- ═══════════ SCRIPTS ═══════════ -->
+<script>
+// Custom cursor
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+});
+
+function animateRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) *.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+// Hover effects
+document.querySelectorAll('a, button, .feature-card, .alumni-card, .job-card, .event-card-featured, .event-card-small, .story-card-featured, .story-card-small, .campaign-card, .proto-dot').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '16px';
+    cursor.style.height = '16px';
+    ring.style.width = '56px';
+    ring.style.height = '56px';
+    ring.style.opacity = '0.6';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '10px';
+    cursor.style.height = '10px';
+    ring.style.width = '38px';
+    ring.style.height = '38px';
+    ring.style.opacity = '1';
+  });
+});
+
+// Filter pills
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+  });
+});
+
+// Job cards
+document.querySelectorAll('.job-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.job-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+  });
+});
+
+// Nav dots
+const sections = document.querySelectorAll('section[id]');
+const dots = document.querySelectorAll('.proto-dot');
+
+function scrollToSection(i) {
+  const allSections = [
+    document.getElementById('s0'),
+    document.getElementById('s1'),
+    document.getElementById('s2'),
+    document.getElementById('s3'),
+    document.getElementById('s4'),
+    document.getElementById('s5'),
+    document.getElementById('s6'),
+    document.getElementById('s7'),
+  ];
+  if (allSections[i]) allSections[i].scrollIntoView({ behavior: 'smooth' });
+}
+
+// Intersection observer for nav dots
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      const idx = parseInt(id.replace('s', ''));
+      dots.forEach(d => d.classList.remove('active'));
+      if (dots[idx]) dots[idx].classList.add('active');
+    }
+  });
+}, { threshold: 0.4 });
+
+document.querySelectorAll('section[id^="s"]').forEach(s => observer.observe(s));
+
+// Nav toggle logic
+const navToggle = document.querySelector('.nav-toggle-btn');
+const body = document.body;
+
+if (navToggle) {
+  navToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    body.classList.toggle('nav-open');
+  });
+}
+
+// Close menu when clicking outside
+body.addEventListener('click', (e) => {
+  if (body.classList.contains('nav-open') && !e.target.closest('nav')) {
+    body.classList.remove('nav-open');
+  }
+});
+
+// Close menu on link click
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', () => {
+    body.classList.remove('nav-open');
+  });
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

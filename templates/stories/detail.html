@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}{{ story.title }} — {{ site_name }} Success Stories{% endblock %}
+
+{% block content %}
+<section class="story-detail" style="padding-top: 120px; padding-bottom: 80px;">
+  <div class="container" style="max-width: 900px; margin: 0 auto; width: 90%;">
+    <a href="{% url 'stories:stories_list' %}" style="display:inline-flex; align-items:center; gap:8px; color:var(--muted); text-decoration:none; margin-bottom:30px; font-size:14px; transition:color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">
+        ← Back to Stories
+    </a>
+
+    <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);">
+      {% if story.thumbnail %}
+      <div style="width: 100%; height: 450px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">
+        <img src="{{ story.thumbnail.url }}" alt="{{ story.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+      </div>
+      {% endif %}
+
+      <div style="padding: 50px;">
+        <div style="display:flex;gap:8px; margin-bottom: 20px;">
+          {% for tag in story.tags.split %}
+            <span class="tag tag-gold" style="font-size: 11px;">{{ tag|join:'' }}</span>
+          {% endfor %}
+        </div>
+        
+        <h1 style="font-size: 42px; color: var(--sand); margin-bottom: 30px; line-height: 1.2;">{{ story.title }}</h1>
+        
+        <div class="story-author" style="margin-bottom: 40px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; display: inline-flex; align-items: center; gap: 15px;">
+          <div class="story-author-av av-1" style="width: 50px; height: 50px; font-size: 20px;">{{ story.author.full_name|first|upper }}</div>
+          <div>
+            <div class="story-author-name" style="font-size: 16px; color: #fff;">{{ story.author.full_name }}</div>
+            <div class="story-author-role" style="font-size: 13px; color: var(--muted);">{{ site_name }} Alumnus · Batch {{ story.author.alumni_profile.graduation_year|default:'(N/A)' }}</div>
+          </div>
+        </div>
+
+        <div style="line-height: 1.8; color: rgba(255, 255, 255, 0.85); font-size: 18px; white-space: pre-line;">
+          {{ story.content }}
+        </div>
+
+        <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 13px; color: var(--muted);">
+            Published on {{ story.published_at|date:"F j, Y" }}
+            {% if story.updated_at > story.submitted_at %}
+                <span style="margin-left: 10px; color: var(--gold); opacity: 0.8;">(Updated {{ story.updated_at|timesince }} ago)</span>
+            {% endif %}
+          </div>
+          <div style="display: flex; gap: 15px; align-items: center;">
+            {% if user == story.author %}
+            <a href="{% url 'stories:edit_story' story.id %}" class="btn-primary" style="padding: 10px 20px; font-size: 13px;">Edit Story</a>
+            <form method="POST" action="{% url 'stories:delete' story.id %}" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this success story? This action cannot be undone.')">
+                {% csrf_token %}
+                <button type="submit" class="btn-primary">Delete Story</button>
+            </form>
+            {% endif %}
+            <a href="#" style="color: var(--muted); text-decoration: none; font-size: 20px;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--muted)'">🔗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
